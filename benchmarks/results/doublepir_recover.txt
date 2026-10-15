@@ -1,0 +1,49 @@
+Working with: n=1024; db size=2^29 (l=14564, m=65536); logq=32; p=552; sigma=6.400000
+Total packed DB size is ~1036.379298 MB
+Executing DoublePIR
+Setup...
+	Elapsed: 2m47.874594181s
+		Offline download: 16384.000000 KB
+Building query...
+	Elapsed: 70.92263ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 58.514251ms
+	Rate: 17711.570782 MB/s
+		Online download: 32.000000 KB
+Reconstructing...
+Success!
+	Elapsed: 122.616871ms
+Working with: n=1024; db size=2^29 (l=14564, m=65536); logq=32; p=552; sigma=6.400000
+Total packed DB size is ~1036.379298 MB
+Executing DoublePIR
+Setup...
+	Elapsed: 2m52.748148258s
+		Offline download: 16384.000000 KB
+Building query...
+	Elapsed: 68.575127ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 55.68864ms
+	Rate: 18610.246153 MB/s
+		Online download: 32.000000 KB
+Reconstructing...
+Success!
+	Elapsed: 136.770811ms
+Executing DoublePIR
+Setup...
+	Elapsed: 2m47.436073481s
+		Offline download: 16384.000000 KB
+Building query...
+	Elapsed: 70.111147ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 59.373418ms
+	Rate: 17455.274317 MB/s
+		Online download: 32.000000 KB
+Reconstructing...
+Success!
+	Elapsed: 127.403857ms

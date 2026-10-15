@@ -1,0 +1,1640 @@
+{
+ "format": "rc-pir-testvectors",
+ "version": 1,
+ "file": "params",
+ "spec": "docs/params_format.md \u00a71, \u00a74",
+ "description": "params.json validation fixtures. Each invalid fixture is the spec example with exactly one rule violated. 'params' is the parsed object; serialize it with any JSON encoder if a file is needed. insecure_override marks fixtures whose security.mode is 'insecure-override' (valid, but clients should surface a warning). Contents of 'security' are not validated otherwise.",
+ "valid": [
+  {
+   "name": "spec_example",
+   "note": "docs/params_format.md \u00a73 with concrete digests.",
+   "verdict": "valid",
+   "insecure_override": false,
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "minimal",
+   "note": "t = 1, s = m = columns_per_shard = 1, L = 8: every lower bound attained.",
+   "verdict": "valid",
+   "insecure_override": false,
+   "params": {
+    "format_version": 1,
+    "t": 1,
+    "ell": 64,
+    "L": 8,
+    "m": 1,
+    "s": 1,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 1,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "max_m",
+   "note": "m = s = 2^32: upper bound attained.",
+   "verdict": "valid",
+   "insecure_override": false,
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 4294967296,
+    "s": 4294967296,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "insecure_override",
+   "note": "Test-only insecure override recorded in `security`: valid, but clients should warn.",
+   "verdict": "valid",
+   "insecure_override": true,
+   "params": {
+    "format_version": 1,
+    "t": 3,
+    "ell": 128,
+    "L": 16,
+    "m": 48,
+    "s": 4,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 48,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 162,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 16.0,
+      "mitm": 7.2,
+      "brute_force": 14.3
+     },
+     "binding_attack": "mitm",
+     "mode": "insecure-override",
+     "insecure": true
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "no_metadata",
+   "note": "security, created and encoder_version are optional (params_format.md \u00a74).",
+   "verdict": "valid",
+   "insecure_override": false,
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384
+   }
+  },
+  {
+   "name": "unknown_field",
+   "note": "Unknown fields are ignored (forward compatibility).",
+   "verdict": "valid",
+   "insecure_override": false,
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0",
+    "future_field": {
+     "x": [
+      1,
+      2
+     ]
+    }
+   }
+  }
+ ],
+ "invalid": [
+  {
+   "name": "format_version_2",
+   "verdict": "invalid",
+   "violated_rule": "format_version == 1",
+   "params": {
+    "format_version": 2,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "format_version_string",
+   "verdict": "invalid",
+   "violated_rule": "format_version == 1",
+   "params": {
+    "format_version": "1",
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "h_prg_unknown",
+   "verdict": "invalid",
+   "violated_rule": "h_prg is a known value",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v2",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "noise_unknown",
+   "verdict": "invalid",
+   "violated_rule": "noise is a known value",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "bernoulli",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "t_zero",
+   "verdict": "invalid",
+   "violated_rule": "t >= 1",
+   "params": {
+    "format_version": 1,
+    "t": 0,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "t_negative",
+   "verdict": "invalid",
+   "violated_rule": "t >= 1",
+   "params": {
+    "format_version": 1,
+    "t": -5,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "t_string",
+   "verdict": "invalid",
+   "violated_rule": "t >= 1 (integer)",
+   "params": {
+    "format_version": 1,
+    "t": "131072",
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "s_zero",
+   "verdict": "invalid",
+   "violated_rule": "1 <= s",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 0,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "s_greater_than_m",
+   "verdict": "invalid",
+   "violated_rule": "s <= m",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 2097153,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "m_too_large",
+   "verdict": "invalid",
+   "violated_rule": "m <= 2^32",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 4294967297,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "L_zero",
+   "verdict": "invalid",
+   "violated_rule": "L >= 8",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 0,
+    "L": 0,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "L_4",
+   "verdict": "invalid",
+   "violated_rule": "L >= 8",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32,
+    "L": 4,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "L_not_multiple_of_8",
+   "verdict": "invalid",
+   "violated_rule": "L % 8 == 0",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 96,
+    "L": 12,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "ell_mismatch",
+   "verdict": "invalid",
+   "violated_rule": "ell == 8 * L",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32769,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "ell_equals_L",
+   "verdict": "invalid",
+   "violated_rule": "ell == 8 * L",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 4096,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "columns_per_shard_zero",
+   "verdict": "invalid",
+   "violated_rule": "1 <= columns_per_shard",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 0,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "columns_per_shard_greater_than_m",
+   "verdict": "invalid",
+   "violated_rule": "columns_per_shard <= m",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 2097153,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "columns_per_shard_string",
+   "verdict": "invalid",
+   "violated_rule": "columns_per_shard (integer)",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": "16384",
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "h_seed_uppercase",
+   "verdict": "invalid",
+   "violated_rule": "h_seed is 32 lowercase hex chars",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3F9C0A1B2C3D4E5F60718293A4B5C6E1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "h_seed_short",
+   "verdict": "invalid",
+   "violated_rule": "h_seed is 32 lowercase hex chars",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "h_seed_long",
+   "verdict": "invalid",
+   "violated_rule": "h_seed is 32 lowercase hex chars",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e100",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "h_seed_non_hex",
+   "verdict": "invalid",
+   "violated_rule": "h_seed is 32 lowercase hex chars",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6eg",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "h_seed_0x_prefix",
+   "verdict": "invalid",
+   "violated_rule": "h_seed is 32 lowercase hex chars",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "0x3f9c0a1b2c3d4e5f60718293a4b5c6",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "db_digest_uppercase",
+   "verdict": "invalid",
+   "violated_rule": "digest = sha256: + 64 lowercase hex",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "db_digest_no_prefix",
+   "verdict": "invalid",
+   "violated_rule": "digest = sha256: + 64 lowercase hex",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "abababababababababababababababababababababababababababababababab",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "db_digest_sha512",
+   "verdict": "invalid",
+   "violated_rule": "digest = sha256: + 64 lowercase hex",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha512:abababababababababababababababababababababababababababababababab",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "db_digest_63_hex",
+   "verdict": "invalid",
+   "violated_rule": "digest = sha256: + 64 lowercase hex",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "r_digest_65_hex",
+   "verdict": "invalid",
+   "violated_rule": "digest = sha256: + 64 lowercase hex",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "r_digest_uppercase_prefix",
+   "verdict": "invalid",
+   "violated_rule": "digest = sha256: + 64 lowercase hex",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "SHA256:abababababababababababababababababababababababababababababababab",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_format_version",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_t",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_ell",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_L",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_m",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_s",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_h_prg",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_h_seed",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_noise",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_db_digest",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_r_digest",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "columns_per_shard": 16384,
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  },
+  {
+   "name": "missing_columns_per_shard",
+   "verdict": "invalid",
+   "violated_rule": "protocol field present",
+   "params": {
+    "format_version": 1,
+    "t": 131072,
+    "ell": 32768,
+    "L": 4096,
+    "m": 2097152,
+    "s": 45,
+    "h_prg": "aes128-ctr-col-v1",
+    "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+    "noise": "fixed-weight",
+    "db_digest": "sha256:7b150edd2536827a31b2122c8590ac07c81167ca5aff56fb7302f1b3f9eaef3c",
+    "r_digest": "sha256:76b8a1124a60c147ac0a8b05eefb0d6b64711e9ac085a941140edd8f1b5fdc5d",
+    "security": {
+     "lambda": 128,
+     "log2_Q": 32,
+     "lambda_eff": 177,
+     "c_eff": 16.0,
+     "attack_bits": {
+      "prange": 180.0,
+      "mitm": 348.9,
+      "brute_force": 697.9
+     },
+     "binding_attack": "prange",
+     "mode": "A",
+     "c": 16
+    },
+    "created": "2026-10-09T12:00:00Z",
+    "encoder_version": "0.1.0"
+   }
+  }
+ ]
+}

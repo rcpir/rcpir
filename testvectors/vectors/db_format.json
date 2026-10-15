@@ -1,0 +1,422 @@
+{
+ "format": "rc-pir-testvectors",
+ "version": 1,
+ "file": "db_format",
+ "spec": "docs/db_format.md",
+ "description": "valid: JSONL input (exact bytes in jsonl_hex; 'jsonl' is the same text) -> t, L, ell, the packed X.bin (column-major, t columns of L bytes, x_bin_hex) and db_digest = sha256(X.bin). invalid: inputs that must be rejected; error_line is 1-based (null for the empty file), 'reason' is informative. decode: column bytes (L given) -> payload, or rejection.",
+ "valid": [
+  {
+   "name": "spec_example",
+   "note": "Example of docs/db_format.md \u00a72.",
+   "jsonl": "{\"data\": \"SGVsbG8gd29ybGQ=\"}\n{\"data\": \"\", \"key\": \"empty-block\"}\n{\"data\": \"AAECAwQ=\"}\n",
+   "jsonl_hex": "7b2264617461223a20225347567362473867643239796247513d227d0a7b2264617461223a2022222c20226b6579223a2022656d7074792d626c6f636b227d0a7b2264617461223a2022414145434177513d227d0a",
+   "t": 3,
+   "max_payload": 11,
+   "sum_payload": 16,
+   "L": 16,
+   "ell": 128,
+   "payloads_hex": [
+    "48656c6c6f20776f726c64",
+    "",
+    "0001020304"
+   ],
+   "x_bin_hex": "0000000b48656c6c6f20776f726c64000000000000000000000000000000000000000005000102030400000000000000",
+   "db_digest": "sha256:e2c0567c0f370e3c00f0abe0b311130c4144e86b1fc6769a38bf0b164232b0d8"
+  },
+  {
+   "name": "single_empty",
+   "note": "t=1, empty payload, L=8.",
+   "jsonl": "{\"data\": \"\"}\n",
+   "jsonl_hex": "7b2264617461223a2022227d0a",
+   "t": 1,
+   "max_payload": 0,
+   "sum_payload": 0,
+   "L": 8,
+   "ell": 64,
+   "payloads_hex": [
+    ""
+   ],
+   "x_bin_hex": "0000000000000000",
+   "db_digest": "sha256:af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+  },
+  {
+   "name": "fill_L8",
+   "note": "Largest payload is 4 bytes, so 4+4 = L = 8 (payload fills L-4 exactly).",
+   "jsonl": "{\"data\": \"YWJjZA==\"}\n{\"data\": \"eA==\"}\n",
+   "jsonl_hex": "7b2264617461223a202259574a6a5a413d3d227d0a7b2264617461223a202265413d3d227d0a",
+   "t": 2,
+   "max_payload": 4,
+   "sum_payload": 5,
+   "L": 8,
+   "ell": 64,
+   "payloads_hex": [
+    "61626364",
+    "78"
+   ],
+   "x_bin_hex": "00000004616263640000000178000000",
+   "db_digest": "sha256:03bd69e36bef23c56ab5ec38ad88cc8914d60576898553d728d78f76eef61c17"
+  },
+  {
+   "name": "just_over_L8",
+   "note": "Payload of 5 bytes forces L = 16.",
+   "jsonl": "{\"data\": \"YWJjZGU=\"}\n",
+   "jsonl_hex": "7b2264617461223a202259574a6a5a47553d227d0a",
+   "t": 1,
+   "max_payload": 5,
+   "sum_payload": 5,
+   "L": 16,
+   "ell": 128,
+   "payloads_hex": [
+    "6162636465"
+   ],
+   "x_bin_hex": "00000005616263646500000000000000",
+   "db_digest": "sha256:1f410648ee5697bec797a9c5427b7f05ae474e0e6ee2edbbfa89d9622325989b"
+  },
+  {
+   "name": "t9_mixed_exact_fill",
+   "note": "t=9 (not a multiple of 8); block 8 has 12 bytes and fills L-4 exactly (L=16).",
+   "jsonl": "{\"data\": \"\"}\n{\"data\": \"6w==\"}\n{\"data\": \"Alw=\"}\n{\"data\": \"2uG2\"}\n{\"data\": \"EWlvFQ==\"}\n{\"data\": \"f46cRDw=\"}\n{\"data\": \"Mv8Zigu5\"}\n{\"data\": \"8H/DQW8r+Q==\"}\n{\"data\": \"TSi1d6U5G8yJZXVn\"}\n",
+   "jsonl_hex": "7b2264617461223a2022227d0a7b2264617461223a202236773d3d227d0a7b2264617461223a2022416c773d227d0a7b2264617461223a202232754732227d0a7b2264617461223a202245576c7646513d3d227d0a7b2264617461223a2022663436635244773d227d0a7b2264617461223a20224d76385a69677535227d0a7b2264617461223a202238482f44515738722b513d3d227d0a7b2264617461223a202254536931643655354738794a5a58566e227d0a",
+   "t": 9,
+   "max_payload": 12,
+   "sum_payload": 40,
+   "L": 16,
+   "ell": 128,
+   "payloads_hex": [
+    "",
+    "eb",
+    "025c",
+    "dae1b6",
+    "11696f15",
+    "7f8e9c443c",
+    "32ff198a0bb9",
+    "f07fc3416f2bf9",
+    "4d28b577a5391bcc89657567"
+   ],
+   "x_bin_hex": "0000000000000000000000000000000000000001eb000000000000000000000000000002025c0000000000000000000000000003dae1b60000000000000000000000000411696f150000000000000000000000057f8e9c443c000000000000000000000632ff198a0bb900000000000000000007f07fc3416f2bf900000000000000000c4d28b577a5391bcc89657567",
+   "db_digest": "sha256:b565ff16b6f6d2497a794331506b39034ac01ecc76ef78fa8b9b747e79371f4d"
+  },
+  {
+   "name": "extra_fields_no_trailing_newline",
+   "note": "Other fields are ignored (any type, any order, non-ASCII, surrounding JSON whitespace). The last line has no trailing newline. Base64 uses '+' and '/'. Block 3 is all zeros.",
+   "jsonl": "{\"key\": \"first\", \"data\": \"AQID\"}\n{\"data\":\"/w==\",\"n\":1,\"nested\":{\"a\":[1,2,3]},\"flag\":true,\"nothing\":null}\n  {  \"k\\u00e9y\" : \"\u00e9t\u00e9 \u2603\" , \"data\" : \"+/+/\"  }  \n{\"data\": \"AAAAAAAAAAAAAAAAAAAAAA==\"}",
+   "jsonl_hex": "7b226b6579223a20226669727374222c202264617461223a202241514944227d0a7b2264617461223a222f773d3d222c226e223a312c226e6573746564223a7b2261223a5b312c322c335d7d2c22666c6167223a747275652c226e6f7468696e67223a6e756c6c7d0a20207b2020226b5c75303065397922203a2022c3a974c3a920e2988322202c20226461746122203a20222b2f2b2f2220207d20200a7b2264617461223a2022414141414141414141414141414141414141414141413d3d227d",
+   "t": 4,
+   "max_payload": 16,
+   "sum_payload": 23,
+   "L": 24,
+   "ell": 192,
+   "payloads_hex": [
+    "010203",
+    "ff",
+    "fbffbf",
+    "00000000000000000000000000000000"
+   ],
+   "x_bin_hex": "00000003010203000000000000000000000000000000000000000001ff0000000000000000000000000000000000000000000003fbffbf0000000000000000000000000000000000000000100000000000000000000000000000000000000000",
+   "db_digest": "sha256:1785fdf3a73bc0d24543e8e55d6173afcb0b08a1b932c05e0813708440dcc691"
+  },
+  {
+   "name": "t17_pseudorandom",
+   "note": "t=17, pseudorandom payloads, max 100 bytes (L=104).",
+   "jsonl": "{\"data\": \"i0CE6Y4iJ7gSHFW5DBMyqkClb71bZ2/nzQCVPePawt/7r60R69/ObST5rCSnjec1S+PZQdz6kBu2Om3yXNhdUc/XZNF3pkgZmAa5LlOyvMIpjDkIIbQ+JnEdiw==\"}\n{\"data\": \"t0zchhKjXc+D0Mbxv06Z+6vojTEhuK4QiROj8+W3xaQzSok=\"}\n{\"data\": \"NlADB0QRvKU35AC5nK9c66du1PYV9uc+Y6IwdsPSolm6RPgw5G4CzyLKIOcCUZcowxISkjERy3vG+TR+28OuCQMPHu3p9sNuRRKjiRikiw==\"}\n{\"data\": \"4gouoNnn1O0aTWiSXGaCskGJ+LCa1952YBhqYAt8icXtVYMXJhb/IvPcHAJPAzTr1ldOM7+mY6vMIeSa\"}\n{\"data\": \"jfGPTCzUIqA33V49DrLnSTEmOiuXsCO6h1lLu1uae6I503RpuvsHNmllwZ5RkgvpEQ==\"}\n{\"data\": \"R4W7poR4SHwkDAzm5jHpAZyCnna2DM0aNxfWj7fj0ssSbx3dGVA7xqwlPZViO8uGyiYfNkFLIQh1YRMrkE3utXGtom7ua8R12NO8T9vMPSh3OWoBgtKEXXdUeuYBpxdkJX/4EA==\"}\n{\"data\": \"yiPootkHaG9iLsNV5g==\"}\n{\"data\": \"7zaw7IJ4sQWurWV43x9l5Ll28Pqv4PEbEDW/YLknXVjAcUprlMe3uEJelQF+rXEuH0yjxxBpOerocInaI5K6qPfHZffcC2LhACo=\"}\n{\"data\": \"986+EW3oljXvi1VsrXiJTcsMOIn1XeJLr8CFQiOp0/78t/0dpz8LczpvudK1PW4kpbDps+OodZ941NjBjOwX+kQqy3cjHK1zVwUf5Q/VYkao82T0rp/wonQy\"}\n{\"data\": \"lexmVlCcdKLNV+xBKA==\"}\n{\"data\": \"WCoF45xXOsszk6Tr74Ql6am3Emy8EKBkUMMq16n48zVhmqtOOqEu\"}\n{\"data\": \"E8Fh4CZJc/Gk2c04ILJqgaJN7212u3xE9+ED8/U=\"}\n{\"data\": \"k/3wFHpocfVffrZ8RfVaoXGR7TABDjk+JVlmLXsCeh7YCJ4KlOEeEaiNB0bnlBDHsKvCpPcvnjhZeAlcVX3IJC2eY6zrHmasXPjztSwwIMPGOnVsvsK4lFeSdc9ymkTt\"}\n{\"data\": \"BZBSKIvF4h/DHPWBJPCkcFxTLNVPUCa2EM8RyKmMOaVF+6Thh6xkkm0VOg9ZVb/VLWChZW28FTB1\"}\n{\"data\": \"3dHO3N/3p50W81TVXLhzrtts/s5V\"}\n{\"data\": \"rN5Muejo64IzBJFfKRoVgWwpQ4kOe6fjdj4F9keDM/UhhVSJF3jVJG3kw5Vb4O51Spplq0VQlKFPxJCdk6P8\"}\n{\"data\": \"7Fi/CvjZAFlGhjErDRUCs0hErjKr0Q3Q+DePc8c4m/nQdJCLewGU0fcan4QKae4AMqrJg1A=\"}\n",
+   "jsonl_hex": "7b2264617461223a202269304345365934694a3767534846573544424d79716b436c623731625a322f6e7a5143565065506177742f377236305236392f4f625354357243536e6a656331532b505a51647a366b4275324f6d3379584e686455632f585a4e4633706b675a6d4161354c6c4f79764d49706a446b494962512b4a6e456469773d3d227d0a7b2264617461223a202274307a6368684b6a58632b44304d62787630365a2b36766f6a544568754b345169524f6a382b57337861517a536f6b3d227d0a7b2264617461223a20224e6c414442305152764b5533354143356e4b396336366475315059563975632b59364977647350536f6c6d3652506777354734437a794c4b494f6343555a636f777849536b6a4552793376472b54522b32384f7543514d504875337039734e7552524b6a6952696b69773d3d227d0a7b2264617461223a202234676f756f4e6e6e314f30615457695358476143736b474a2b4c43613139353259426871594174386963587456594d584a68622f4976506348414a50417a5472316c644f4d372b6d5936764d49655361227d0a7b2264617461223a20226a66475054437a55497141333356343944724c6e5354456d4f69755873434f3668316c4c753175616536493530335270757673484e6d6c6c775a35526b67767045513d3d227d0a7b2264617461223a202252345737706f52345348776b44417a6d356a4870415a79436e6e6132444d30614e7866576a37666a3073735362783364475641377871776c505a56694f387547796959664e6b464c4951683159524d726b453375745847746f6d377561385231324e4f385439764d505368334f576f4267744b4558586455657559427078646b4a582f3445413d3d227d0a7b2264617461223a20227969506f6f746b48614739694c734e5635673d3d227d0a7b2264617461223a2022377a617737494a3473515775725756343378396c354c6c3238507176345045624544572f594c6b6e58566a41635570726c4d653375454a656c51462b725845754830796a787842704f65726f63496e6149354b36715066485a66666343324c6841436f3d227d0a7b2264617461223a20223938362b4557336f6c6a5876693156737258694a5463734d4f496e3158654a4c7238434651694f70302f3738742f3064707a384c637a707675644b315057346b70624470732b4f6f645a3934314e6a426a4f77582b6b51717933636a484b317a5677556635512f56596b616f3832543072702f776f6e5179227d0a7b2264617461223a20226c65786d566c4363644b4c4e562b78424b413d3d227d0a7b2264617461223a202257436f46343578584f73737a6b3654723734516c36616d33456d7938454b426b554d4d7131366e34387a56686d71744f4f714575227d0a7b2264617461223a20224538466834435a4a632f476b32633034494c4a7167614a4e3732313275337845392b4544382f553d227d0a7b2264617461223a20226b2f33774648706f6366566666725a38526656616f58475237544142446a6b2b4a566c6d4c58734365683759434a344b6c4f45654561694e4230626e6c424448734b7643705063766e6a685a65416c63565833494a43326559367a72486d617358506a7a74537777494d50474f6e567376734b346c466553646339796d6b5474227d0a7b2264617461223a2022425a42534b49764634682f44485057424a50436b634678544c4e565055436132454d3852794b6d4d4f6156462b3654686836786b6b6d30564f67395a56622f564c5743685a57323846544231227d0a7b2264617461223a20223364484f334e2f337035305738315456584c687a727474732f733556227d0a7b2264617461223a2022724e354d75656a6f3634497a424a46664b526f566757777051346b4f6536666a646a3446396b65444d2f55686856534a46336a564a47336b77355662344f35315370706c713056516c4b4650784a43646b365038227d0a7b2264617461223a20223746692f43766a5a41466c47686a45724452554373306845726a4b72305133512b446550633863346d2f6e51644a434c65774755306663616e34514b616534414d71724a6731413d227d0a",
+   "t": 17,
+   "max_payload": 100,
+   "sum_payload": 962,
+   "L": 104,
+   "ell": 832,
+   "payloads_hex": [
+    "8b4084e98e2227b8121c55b90c1332aa40a56fbd5b676fe7cd00953de3dac2dffbafad11ebdfce6d24f9ac24a78de7354be3d941dcfa901bb63a6df25cd85d51cfd764d177a648199806b92e53b2bcc2298c390821b43e26711d8b",
+    "b74cdc8612a35dcf83d0c6f1bf4e99fbabe88d3121b8ae108913a3f3e5b7c5a4334a89",
+    "365003074411bca537e400b99caf5ceba76ed4f615f6e73e63a23076c3d2a259ba44f830e46e02cf22ca20e702519728c31212923111cb7bc6f9347edbc3ae09030f1eede9f6c36e4512a38918a48b",
+    "e20a2ea0d9e7d4ed1a4d68925c6682b24189f8b09ad7de7660186a600b7c89c5ed5583172616ff22f3dc1c024f0334ebd6574e33bfa663abcc21e49a",
+    "8df18f4c2cd422a037dd5e3d0eb2e74931263a2b97b023ba87594bbb5b9a7ba239d37469bafb07366965c19e51920be911",
+    "4785bba68478487c240c0ce6e631e9019c829e76b60ccd1a3717d68fb7e3d2cb126f1ddd19503bc6ac253d95623bcb86ca261f36414b21087561132b904deeb571ada26eee6bc475d8d3bc4fdbcc3d2877396a0182d2845d77547ae601a71764257ff810",
+    "ca23e8a2d907686f622ec355e6",
+    "ef36b0ec8278b105aead6578df1f65e4b976f0faafe0f11b1035bf60b9275d58c0714a6b94c7b7b8425e95017ead712e1f4ca3c7106939eae87089da2392baa8f7c765f7dc0b62e1002a",
+    "f7cebe116de89635ef8b556cad78894dcb0c3889f55de24bafc0854223a9d3fefcb7fd1da73f0b733a6fb9d2b53d6e24a5b0e9b3e3a8759f78d4d8c18cec17fa442acb77231cad7357051fe50fd56246a8f364f4ae9ff0a27432",
+    "95ec6656509c74a2cd57ec4128",
+    "582a05e39c573acb3393a4ebef8425e9a9b7126cbc10a06450c32ad7a9f8f335619aab4e3aa12e",
+    "13c161e0264973f1a4d9cd3820b26a81a24def6d76bb7c44f7e103f3f5",
+    "93fdf0147a6871f55f7eb67c45f55aa17191ed30010e393e2559662d7b027a1ed8089e0a94e11e11a88d0746e79410c7b0abc2a4f72f9e385978095c557dc8242d9e63aceb1e66ac5cf8f3b52c3020c3c63a756cbec2b894579275cf729a44ed",
+    "059052288bc5e21fc31cf58124f0a4705c532cd54f5026b610cf11c8a98c39a545fba4e187ac64926d153a0f5955bfd52d60a1656dbc153075",
+    "ddd1cedcdff7a79d16f354d55cb873aedb6cfece55",
+    "acde4cb9e8e8eb823304915f291a15816c2943890e7ba7e3763e05f6478333f5218554891778d5246de4c3955be0ee754a9a65ab455094a14fc4909d93a3fc",
+    "ec58bf0af8d900594686312b0d1502b34844ae32abd10dd0f8378f73c7389bf9d074908b7b0194d1f71a9f840a69ee0032aac98350"
+   ],
+   "x_bin_hex": "0000005b8b4084e98e2227b8121c55b90c1332aa40a56fbd5b676fe7cd00953de3dac2dffbafad11ebdfce6d24f9ac24a78de7354be3d941dcfa901bb63a6df25cd85d51cfd764d177a648199806b92e53b2bcc2298c390821b43e26711d8b00000000000000000000000023b74cdc8612a35dcf83d0c6f1bf4e99fbabe88d3121b8ae108913a3f3e5b7c5a4334a8900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004f365003074411bca537e400b99caf5ceba76ed4f615f6e73e63a23076c3d2a259ba44f830e46e02cf22ca20e702519728c31212923111cb7bc6f9347edbc3ae09030f1eede9f6c36e4512a38918a48b0000000000000000000000000000000000000000000000003ce20a2ea0d9e7d4ed1a4d68925c6682b24189f8b09ad7de7660186a600b7c89c5ed5583172616ff22f3dc1c024f0334ebd6574e33bfa663abcc21e49a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000318df18f4c2cd422a037dd5e3d0eb2e74931263a2b97b023ba87594bbb5b9a7ba239d37469bafb07366965c19e51920be911000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000644785bba68478487c240c0ce6e631e9019c829e76b60ccd1a3717d68fb7e3d2cb126f1ddd19503bc6ac253d95623bcb86ca261f36414b21087561132b904deeb571ada26eee6bc475d8d3bc4fdbcc3d2877396a0182d2845d77547ae601a71764257ff8100000000dca23e8a2d907686f622ec355e60000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004aef36b0ec8278b105aead6578df1f65e4b976f0faafe0f11b1035bf60b9275d58c0714a6b94c7b7b8425e95017ead712e1f4ca3c7106939eae87089da2392baa8f7c765f7dc0b62e1002a00000000000000000000000000000000000000000000000000000000005af7cebe116de89635ef8b556cad78894dcb0c3889f55de24bafc0854223a9d3fefcb7fd1da73f0b733a6fb9d2b53d6e24a5b0e9b3e3a8759f78d4d8c18cec17fa442acb77231cad7357051fe50fd56246a8f364f4ae9ff0a27432000000000000000000000000000d95ec6656509c74a2cd57ec412800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000027582a05e39c573acb3393a4ebef8425e9a9b7126cbc10a06450c32ad7a9f8f335619aab4e3aa12e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001d13c161e0264973f1a4d9cd3820b26a81a24def6d76bb7c44f7e103f3f500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006093fdf0147a6871f55f7eb67c45f55aa17191ed30010e393e2559662d7b027a1ed8089e0a94e11e11a88d0746e79410c7b0abc2a4f72f9e385978095c557dc8242d9e63aceb1e66ac5cf8f3b52c3020c3c63a756cbec2b894579275cf729a44ed0000000000000039059052288bc5e21fc31cf58124f0a4705c532cd54f5026b610cf11c8a98c39a545fba4e187ac64926d153a0f5955bfd52d60a1656dbc1530750000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015ddd1cedcdff7a79d16f354d55cb873aedb6cfece55000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003facde4cb9e8e8eb823304915f291a15816c2943890e7ba7e3763e05f6478333f5218554891778d5246de4c3955be0ee754a9a65ab455094a14fc4909d93a3fc0000000000000000000000000000000000000000000000000000000000000000000000000000000035ec58bf0af8d900594686312b0d1502b34844ae32abd10dd0f8378f73c7389bf9d074908b7b0194d1f71a9f840a69ee0032aac983500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "db_digest": "sha256:5c3e1aca8bb51fe3dd1c3ced505af1bf2d8cdd483b6269a38d73d505eb513418"
+  }
+ ],
+ "invalid": [
+  {
+   "name": "empty_file",
+   "note": "Zero bytes.",
+   "jsonl_hex": "",
+   "jsonl": "",
+   "error_line": null,
+   "reason": "empty_file"
+  },
+  {
+   "name": "only_newline",
+   "note": "A single blank line.",
+   "jsonl_hex": "0a",
+   "jsonl": "\n",
+   "error_line": 1,
+   "reason": "blank_line"
+  },
+  {
+   "name": "blank_line_middle",
+   "note": "Blank line between two valid lines.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a0a7b2264617461223a202241413d3d227d0a",
+   "jsonl": "{\"data\": \"AA==\"}\n\n{\"data\": \"AA==\"}\n",
+   "error_line": 2,
+   "reason": "blank_line"
+  },
+  {
+   "name": "blank_line_end",
+   "note": "Two newlines at the end, i.e. a blank last line (one trailing newline is allowed).",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a7b2264617461223a202241413d3d227d0a0a",
+   "jsonl": "{\"data\": \"AA==\"}\n{\"data\": \"AA==\"}\n\n",
+   "error_line": 3,
+   "reason": "blank_line"
+  },
+  {
+   "name": "whitespace_only_line",
+   "note": "Line with only spaces. Treated as blank (it is not a JSON value either).",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a2020200a",
+   "jsonl": "{\"data\": \"AA==\"}\n   \n",
+   "error_line": 2,
+   "reason": "blank_line"
+  },
+  {
+   "name": "invalid_json_trailing_comma",
+   "note": "Trailing comma.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a7b2264617461223a202241413d3d222c7d0a",
+   "jsonl": "{\"data\": \"AA==\"}\n{\"data\": \"AA==\",}\n",
+   "error_line": 2,
+   "reason": "invalid_json"
+  },
+  {
+   "name": "invalid_json_truncated",
+   "note": "Unterminated string.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a7b2264617461223a202241413d3d227d0a7b2264617461223a202241413d3d0a",
+   "jsonl": "{\"data\": \"AA==\"}\n{\"data\": \"AA==\"}\n{\"data\": \"AA==\n",
+   "error_line": 3,
+   "reason": "invalid_json"
+  },
+  {
+   "name": "two_objects_one_line",
+   "note": "Two JSON values on one line.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d207b2264617461223a202241413d3d227d0a",
+   "jsonl": "{\"data\": \"AA==\"} {\"data\": \"AA==\"}\n",
+   "error_line": 1,
+   "reason": "invalid_json"
+  },
+  {
+   "name": "not_an_object_array",
+   "note": "Top-level JSON array.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a5b2241413d3d225d0a",
+   "jsonl": "{\"data\": \"AA==\"}\n[\"AA==\"]\n",
+   "error_line": 2,
+   "reason": "not_an_object"
+  },
+  {
+   "name": "not_an_object_string",
+   "note": "Top-level JSON string.",
+   "jsonl_hex": "2241413d3d220a",
+   "jsonl": "\"AA==\"\n",
+   "error_line": 1,
+   "reason": "not_an_object"
+  },
+  {
+   "name": "missing_data",
+   "note": "No \"data\" field.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a7b226b6579223a202278227d0a",
+   "jsonl": "{\"data\": \"AA==\"}\n{\"key\": \"x\"}\n",
+   "error_line": 2,
+   "reason": "missing_data"
+  },
+  {
+   "name": "data_wrong_case",
+   "note": "Field names are case-sensitive.",
+   "jsonl_hex": "7b2244617461223a202241413d3d227d0a",
+   "jsonl": "{\"Data\": \"AA==\"}\n",
+   "error_line": 1,
+   "reason": "missing_data"
+  },
+  {
+   "name": "data_number",
+   "note": "\"data\" is a number.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a7b2264617461223a202241413d3d227d0a7b2264617461223a20357d0a",
+   "jsonl": "{\"data\": \"AA==\"}\n{\"data\": \"AA==\"}\n{\"data\": 5}\n",
+   "error_line": 3,
+   "reason": "data_not_string"
+  },
+  {
+   "name": "data_null",
+   "note": "\"data\" is null.",
+   "jsonl_hex": "7b2264617461223a206e756c6c7d0a",
+   "jsonl": "{\"data\": null}\n",
+   "error_line": 1,
+   "reason": "data_not_string"
+  },
+  {
+   "name": "data_array",
+   "note": "\"data\" is an array.",
+   "jsonl_hex": "7b2264617461223a205b302c20315d7d0a",
+   "jsonl": "{\"data\": [0, 1]}\n",
+   "error_line": 1,
+   "reason": "data_not_string"
+  },
+  {
+   "name": "base64_bad_char",
+   "note": "'*' is not in the alphabet.",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a7b2264617461223a2022534756736247382a227d0a",
+   "jsonl": "{\"data\": \"AA==\"}\n{\"data\": \"SGVsbG8*\"}\n",
+   "error_line": 2,
+   "reason": "invalid_base64"
+  },
+  {
+   "name": "base64_urlsafe",
+   "note": "URL-safe alphabet ('-', '_') is not standard base64.",
+   "jsonl_hex": "7b2264617461223a20222d5f383d227d0a",
+   "jsonl": "{\"data\": \"-_8=\"}\n",
+   "error_line": 1,
+   "reason": "invalid_base64"
+  },
+  {
+   "name": "base64_missing_padding",
+   "note": "Padding '=' is required (length not a multiple of 4).",
+   "jsonl_hex": "7b2264617461223a202253475673624738227d0a",
+   "jsonl": "{\"data\": \"SGVsbG8\"}\n",
+   "error_line": 1,
+   "reason": "invalid_base64"
+  },
+  {
+   "name": "base64_extra_padding",
+   "note": "Too much padding.",
+   "jsonl_hex": "7b2264617461223a202241413d3d3d227d0a",
+   "jsonl": "{\"data\": \"AA===\"}\n",
+   "error_line": 1,
+   "reason": "invalid_base64"
+  },
+  {
+   "name": "base64_inner_space",
+   "note": "Space inside the string.",
+   "jsonl_hex": "7b2264617461223a202253475673206247383d227d0a",
+   "jsonl": "{\"data\": \"SGVs bG8=\"}\n",
+   "error_line": 1,
+   "reason": "invalid_base64"
+  },
+  {
+   "name": "base64_escaped_newline",
+   "note": "JSON-escaped newline inside the base64 string (MIME-style line breaks are not allowed).",
+   "jsonl_hex": "7b2264617461223a2022534756735c6e6247383d227d0a",
+   "jsonl": "{\"data\": \"SGVs\\nbG8=\"}\n",
+   "error_line": 1,
+   "reason": "invalid_base64"
+  },
+  {
+   "name": "base64_padding_in_middle",
+   "note": "Padding in the middle.",
+   "jsonl_hex": "7b2264617461223a202241413d3d41413d3d227d0a",
+   "jsonl": "{\"data\": \"AA==AA==\"}\n",
+   "error_line": 1,
+   "reason": "invalid_base64"
+  },
+  {
+   "name": "invalid_utf8",
+   "note": "Byte 0xff is not valid UTF-8 (in an ignored field, still an error: the file must be UTF-8).",
+   "jsonl_hex": "7b2264617461223a202241413d3d227d0a7b2264617461223a202241413d3d222c20226b6579223a2022ff227d0a",
+   "error_line": 2,
+   "reason": "invalid_utf8"
+  }
+ ],
+ "decode": [
+  {
+   "name": "empty_L8",
+   "note": "len = 0.",
+   "L": 8,
+   "column_hex": "0000000000000000",
+   "payload_hex": ""
+  },
+  {
+   "name": "fill_L8",
+   "note": "len = L-4 (largest allowed).",
+   "L": 8,
+   "column_hex": "0000000461626364",
+   "payload_hex": "61626364"
+  },
+  {
+   "name": "fill_L16",
+   "note": "len = L-4 with L = 16.",
+   "L": 16,
+   "column_hex": "0000000ca4c874a842456d091f36eff2",
+   "payload_hex": "a4c874a842456d091f36eff2"
+  },
+  {
+   "name": "short_L32",
+   "note": "Payload of 3 bytes followed by zero padding.",
+   "L": 32,
+   "column_hex": "0000000300010200000000000000000000000000000000000000000000000000",
+   "payload_hex": "000102"
+  },
+  {
+   "name": "payload_with_zeros",
+   "note": "Payload consisting of zero bytes (length comes from the header).",
+   "L": 16,
+   "column_hex": "00000007000000000000000000000000",
+   "payload_hex": "00000000000000"
+  },
+  {
+   "name": "nonzero_padding_ignored",
+   "note": "Padding bytes after the payload are not checked by the decoder.",
+   "L": 16,
+   "column_hex": "000000026869aaaaaaaaaaaaaaaaaaaa",
+   "payload_hex": "6869"
+  },
+  {
+   "name": "len_L_minus_3",
+   "note": "len = L-3 > L-4.",
+   "L": 8,
+   "column_hex": "0000000561626364",
+   "error": "length_too_large"
+  },
+  {
+   "name": "len_L",
+   "note": "len = L.",
+   "L": 16,
+   "column_hex": "00000010d32ecc01273eff513a8b0f6a",
+   "error": "length_too_large"
+  },
+  {
+   "name": "len_max_u32",
+   "note": "len = 2^32-1.",
+   "L": 8,
+   "column_hex": "ffffffff00000000",
+   "error": "length_too_large"
+  },
+  {
+   "name": "len_high_byte",
+   "note": "len = 2^24: catches little-endian reading of the header.",
+   "L": 64,
+   "column_hex": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "error": "length_too_large"
+  },
+  {
+   "name": "column_too_short",
+   "note": "Column has L-1 bytes.",
+   "L": 16,
+   "column_hex": "000000026869000000000000000000",
+   "error": "wrong_column_length"
+  },
+  {
+   "name": "column_too_long",
+   "note": "Column has L+1 bytes.",
+   "L": 8,
+   "column_hex": "000000026869000000",
+   "error": "wrong_column_length"
+  }
+ ]
+}

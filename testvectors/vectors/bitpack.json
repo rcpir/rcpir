@@ -1,0 +1,383 @@
+{
+ "format": "rc-pir-testvectors",
+ "version": 1,
+ "file": "bitpack",
+ "spec": "docs/db_format.md \u00a73, docs/protocol.md \u00a73",
+ "description": "MSB-first packing of a vector in F_2^t into ceil(t/8) bytes: element 8b+k is bit 7-k of byte b, unused trailing bits are zero. 'bits' lists elements 0..t-1 in order. 'invalid' are byte strings a receiver of a t-bit vector (e.g. the compute server parsing q_c) must reject.",
+ "valid": [
+  {
+   "name": "t1_zeros",
+   "t": 1,
+   "bits": "0",
+   "packed_hex": "00"
+  },
+  {
+   "name": "t1_ones",
+   "t": 1,
+   "bits": "1",
+   "packed_hex": "80"
+  },
+  {
+   "name": "t1_alternating_10",
+   "t": 1,
+   "bits": "1",
+   "packed_hex": "80"
+  },
+  {
+   "name": "t1_first",
+   "t": 1,
+   "bits": "1",
+   "packed_hex": "80"
+  },
+  {
+   "name": "t1_last",
+   "t": 1,
+   "bits": "1",
+   "packed_hex": "80"
+  },
+  {
+   "name": "t7_zeros",
+   "t": 7,
+   "bits": "0000000",
+   "packed_hex": "00"
+  },
+  {
+   "name": "t7_ones",
+   "t": 7,
+   "bits": "1111111",
+   "packed_hex": "fe"
+  },
+  {
+   "name": "t7_alternating_10",
+   "t": 7,
+   "bits": "1010101",
+   "packed_hex": "aa"
+  },
+  {
+   "name": "t7_first",
+   "t": 7,
+   "bits": "1000000",
+   "packed_hex": "80"
+  },
+  {
+   "name": "t7_last",
+   "t": 7,
+   "bits": "0000001",
+   "packed_hex": "02"
+  },
+  {
+   "name": "t8_zeros",
+   "t": 8,
+   "bits": "00000000",
+   "packed_hex": "00"
+  },
+  {
+   "name": "t8_ones",
+   "t": 8,
+   "bits": "11111111",
+   "packed_hex": "ff"
+  },
+  {
+   "name": "t8_alternating_10",
+   "t": 8,
+   "bits": "10101010",
+   "packed_hex": "aa"
+  },
+  {
+   "name": "t8_first",
+   "t": 8,
+   "bits": "10000000",
+   "packed_hex": "80"
+  },
+  {
+   "name": "t8_last",
+   "t": 8,
+   "bits": "00000001",
+   "packed_hex": "01"
+  },
+  {
+   "name": "t9_zeros",
+   "t": 9,
+   "bits": "000000000",
+   "packed_hex": "0000"
+  },
+  {
+   "name": "t9_ones",
+   "t": 9,
+   "bits": "111111111",
+   "packed_hex": "ff80"
+  },
+  {
+   "name": "t9_alternating_10",
+   "t": 9,
+   "bits": "101010101",
+   "packed_hex": "aa80"
+  },
+  {
+   "name": "t9_first",
+   "t": 9,
+   "bits": "100000000",
+   "packed_hex": "8000"
+  },
+  {
+   "name": "t9_last",
+   "t": 9,
+   "bits": "000000001",
+   "packed_hex": "0080"
+  },
+  {
+   "name": "t9_bit7_bit8",
+   "t": 9,
+   "bits": "000000011",
+   "packed_hex": "0180"
+  },
+  {
+   "name": "t15_zeros",
+   "t": 15,
+   "bits": "000000000000000",
+   "packed_hex": "0000"
+  },
+  {
+   "name": "t15_ones",
+   "t": 15,
+   "bits": "111111111111111",
+   "packed_hex": "fffe"
+  },
+  {
+   "name": "t15_alternating_10",
+   "t": 15,
+   "bits": "101010101010101",
+   "packed_hex": "aaaa"
+  },
+  {
+   "name": "t15_first",
+   "t": 15,
+   "bits": "100000000000000",
+   "packed_hex": "8000"
+  },
+  {
+   "name": "t15_last",
+   "t": 15,
+   "bits": "000000000000001",
+   "packed_hex": "0002"
+  },
+  {
+   "name": "t15_bit7_bit8",
+   "t": 15,
+   "bits": "000000011000000",
+   "packed_hex": "0180"
+  },
+  {
+   "name": "t16_zeros",
+   "t": 16,
+   "bits": "0000000000000000",
+   "packed_hex": "0000"
+  },
+  {
+   "name": "t16_ones",
+   "t": 16,
+   "bits": "1111111111111111",
+   "packed_hex": "ffff"
+  },
+  {
+   "name": "t16_alternating_10",
+   "t": 16,
+   "bits": "1010101010101010",
+   "packed_hex": "aaaa"
+  },
+  {
+   "name": "t16_first",
+   "t": 16,
+   "bits": "1000000000000000",
+   "packed_hex": "8000"
+  },
+  {
+   "name": "t16_last",
+   "t": 16,
+   "bits": "0000000000000001",
+   "packed_hex": "0001"
+  },
+  {
+   "name": "t16_bit7_bit8",
+   "t": 16,
+   "bits": "0000000110000000",
+   "packed_hex": "0180"
+  },
+  {
+   "name": "t17_zeros",
+   "t": 17,
+   "bits": "00000000000000000",
+   "packed_hex": "000000"
+  },
+  {
+   "name": "t17_ones",
+   "t": 17,
+   "bits": "11111111111111111",
+   "packed_hex": "ffff80"
+  },
+  {
+   "name": "t17_alternating_10",
+   "t": 17,
+   "bits": "10101010101010101",
+   "packed_hex": "aaaa80"
+  },
+  {
+   "name": "t17_first",
+   "t": 17,
+   "bits": "10000000000000000",
+   "packed_hex": "800000"
+  },
+  {
+   "name": "t17_last",
+   "t": 17,
+   "bits": "00000000000000001",
+   "packed_hex": "000080"
+  },
+  {
+   "name": "t17_bit7_bit8",
+   "t": 17,
+   "bits": "00000001100000000",
+   "packed_hex": "018000"
+  },
+  {
+   "name": "t17_pseudorandom",
+   "t": 17,
+   "bits": "11101100101010101",
+   "packed_hex": "ecaa80"
+  },
+  {
+   "name": "t64_zeros",
+   "t": 64,
+   "bits": "0000000000000000000000000000000000000000000000000000000000000000",
+   "packed_hex": "0000000000000000"
+  },
+  {
+   "name": "t64_ones",
+   "t": 64,
+   "bits": "1111111111111111111111111111111111111111111111111111111111111111",
+   "packed_hex": "ffffffffffffffff"
+  },
+  {
+   "name": "t64_alternating_10",
+   "t": 64,
+   "bits": "1010101010101010101010101010101010101010101010101010101010101010",
+   "packed_hex": "aaaaaaaaaaaaaaaa"
+  },
+  {
+   "name": "t64_first",
+   "t": 64,
+   "bits": "1000000000000000000000000000000000000000000000000000000000000000",
+   "packed_hex": "8000000000000000"
+  },
+  {
+   "name": "t64_last",
+   "t": 64,
+   "bits": "0000000000000000000000000000000000000000000000000000000000000001",
+   "packed_hex": "0000000000000001"
+  },
+  {
+   "name": "t64_bit7_bit8",
+   "t": 64,
+   "bits": "0000000110000000000000000000000000000000000000000000000000000000",
+   "packed_hex": "0180000000000000"
+  },
+  {
+   "name": "t64_pseudorandom",
+   "t": 64,
+   "bits": "0101101001101010001001111110110111001110011100100010010001000101",
+   "packed_hex": "5a6a27edce722445"
+  },
+  {
+   "name": "t100_zeros",
+   "t": 100,
+   "bits": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "packed_hex": "00000000000000000000000000"
+  },
+  {
+   "name": "t100_ones",
+   "t": 100,
+   "bits": "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+   "packed_hex": "fffffffffffffffffffffffff0"
+  },
+  {
+   "name": "t100_alternating_10",
+   "t": 100,
+   "bits": "1010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010",
+   "packed_hex": "aaaaaaaaaaaaaaaaaaaaaaaaa0"
+  },
+  {
+   "name": "t100_first",
+   "t": 100,
+   "bits": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "packed_hex": "80000000000000000000000000"
+  },
+  {
+   "name": "t100_last",
+   "t": 100,
+   "bits": "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+   "packed_hex": "00000000000000000000000010"
+  },
+  {
+   "name": "t100_bit7_bit8",
+   "t": 100,
+   "bits": "0000000110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+   "packed_hex": "01800000000000000000000000"
+  },
+  {
+   "name": "t100_pseudorandom",
+   "t": 100,
+   "bits": "1111001100100011010011101011101111100001101011000000101011011000100001011010110011011000001000000100",
+   "packed_hex": "f3234ebbe1ac0ad885acd82040"
+  }
+ ],
+ "invalid": [
+  {
+   "name": "t1_trailing_bit_set",
+   "t": 1,
+   "packed_hex": "c0",
+   "reason": "trailing_bits_nonzero"
+  },
+  {
+   "name": "t1_lowest_bit_set",
+   "t": 1,
+   "packed_hex": "01",
+   "reason": "trailing_bits_nonzero"
+  },
+  {
+   "name": "t7_last_bit_set",
+   "t": 7,
+   "packed_hex": "01",
+   "reason": "trailing_bits_nonzero"
+  },
+  {
+   "name": "t9_trailing_bit_set",
+   "t": 9,
+   "packed_hex": "ff40",
+   "reason": "trailing_bits_nonzero"
+  },
+  {
+   "name": "t100_trailing_bit_set",
+   "t": 100,
+   "packed_hex": "00000000000000000000000001",
+   "reason": "trailing_bits_nonzero"
+  },
+  {
+   "name": "t9_too_short",
+   "t": 9,
+   "packed_hex": "ff",
+   "reason": "wrong_length"
+  },
+  {
+   "name": "t8_too_long",
+   "t": 8,
+   "packed_hex": "ff00",
+   "reason": "wrong_length"
+  },
+  {
+   "name": "t16_empty",
+   "t": 16,
+   "packed_hex": "",
+   "reason": "wrong_length"
+  }
+ ]
+}

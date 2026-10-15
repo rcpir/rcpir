@@ -1,0 +1,88 @@
+{
+ "format": "rc-pir-testvectors",
+ "version": 1,
+ "file": "qc",
+ "spec": "docs/protocol.md \u00a74 step 3, docs/h_prg.md",
+ "description": "Compute-server query q_c = XOR_{j in S} H[*,j] + e_i, packed MSB-first (ceil(t/8) bytes). S is given as a list (order irrelevant, elements distinct, each < m); i is the block index (< t).",
+ "cases": [
+  {
+   "name": "small",
+   "h_seed": "000102030405060708090a0b0c0d0e0f",
+   "t": 9,
+   "m": 64,
+   "S": [
+    0,
+    5,
+    63
+   ],
+   "i": 8,
+   "qc_hex": "f680"
+  },
+  {
+   "name": "t1",
+   "h_seed": "000102030405060708090a0b0c0d0e0f",
+   "t": 1,
+   "m": 4,
+   "S": [
+    3
+   ],
+   "i": 0,
+   "qc_hex": "00"
+  },
+  {
+   "name": "i_zero",
+   "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+   "t": 1000,
+   "m": 16000,
+   "S": [
+    17,
+    2048,
+    9999,
+    15999
+   ],
+   "i": 0,
+   "qc_hex": "7121b892ebd36fdb5669d7df4df2a7747eaf8627736b6b7c7ce3bfd04112d45381bee8e57061d6de70779d41f7dd11ec37d524a380b597e98ec396848263ad89eea7af4ff65d6f8811fa20cf02e6c9e82ac03066414289e87ba0b91dedeb732448151393c72e7cee7c4e0158506aaac2fc2666f9c0b874e8618adebfef"
+  },
+  {
+   "name": "i_last",
+   "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+   "t": 1000,
+   "m": 16000,
+   "S": [
+    1,
+    2,
+    3
+   ],
+   "i": 999,
+   "qc_hex": "8b23e219f0b4c788d91d727eea3904c5d7d15e8a81584515a67b2fca0efe17362bc78c25d92c134f8196c71b15732e5ac1044f3729de07835e1ce9a1666f07dbac39a8c564e9e820a6fd5a2dfd008062d634492fd6aadcec4c50c9803904f7ee31590e801185d632105c27a31ae51a86b5b223f031ce135461f065c7fb"
+  },
+  {
+   "name": "j_large",
+   "h_seed": "00000000000000000000000000000000",
+   "t": 129,
+   "m": 4294967296,
+   "S": [
+    2147483648,
+    4294967295,
+    0
+   ],
+   "i": 128,
+   "qc_hex": "a5f1b9cb5da01ed5791318abb137998d00"
+  },
+  {
+   "name": "unsorted_S",
+   "h_seed": "3f9c0a1b2c3d4e5f60718293a4b5c6e1",
+   "t": 127,
+   "m": 1000,
+   "S": [
+    999,
+    3,
+    500,
+    42,
+    7
+   ],
+   "i": 64,
+   "qc_hex": "3dd55f1c1f29c8ec7f982d5bb9c4ca40"
+  }
+ ]
+}

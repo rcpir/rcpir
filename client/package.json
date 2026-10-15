@@ -1,0 +1,43 @@
+{
+  "name": "@rcpir/client",
+  "version": "0.1.0",
+  "description": "Client for the sqrt(n) RC-PIR (LPN over F_2): browsers (secure context) and Node >= 19",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "rcpir-get": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=19"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && node --test \"build-test/test/**/*.test.js\""
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcpir/rcpir.git",
+    "directory": "client"
+  },
+  "homepage": "https://github.com/rcpir/rcpir#readme",
+  "bugs": "https://github.com/rcpir/rcpir/issues",
+  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rcpir-common"
+version = "0.1.0"
+description = "RC-PIR spec primitives shared by the Python components (h_prg, bit packing, blocks, paths, params)"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["numpy>=1.26", "cryptography>=42"]
+
+[project.urls]
+Repository = "https://github.com/rcpir/rcpir"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

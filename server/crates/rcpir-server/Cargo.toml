@@ -1,0 +1,23 @@
+[package]
+name = "rcpir-server"
+version = "0.1.0"
+edition = "2024"
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+axum = { version = "0.8.9", default-features = false, features = ["http1", "http2", "tokio", "tracing"] }
+axum-server = { version = "0.8.0", features = ["tls-rustls"] }
+bytes = "1.12.1"
+clap = { version = "4.6.7", features = ["derive"] }
+rcpir-core = { version = "0.1.0", path = "../rcpir-core" }
+tokio = { version = "1.53.2", features = ["rt-multi-thread", "macros", "sync"] }
+tower-http = { version = "0.7.1", features = ["cors"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+
+[dev-dependencies]
+http-body-util = "0.1.5"
+rand = "0.9"
+tower = { version = "0.5.3", features = ["util"] }

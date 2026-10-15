@@ -1,0 +1,26 @@
+	Command being timed: "/home/shahar/projects/rc-pir/.harness/work/7abe8da0/.env/bin/python -u -m rcpir_encoder /home/shahar/projects/rc-pir/.harness/work/7abe8da0/benchmarks/.encode-work/db_524288.jsonl --out /home/shahar/projects/rc-pir/.harness/work/7abe8da0/benchmarks/.encode-work/out_c16 --c 16 --device cuda --yes"
+	User time (seconds): 1804.94
+	System time (seconds): 70.33
+	Percent of CPU this job got: 302%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:19.21
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4138448
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 5223522
+	Voluntary context switches: 20447
+	Involuntary context switches: 95533
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+17179894502	/home/shahar/projects/rc-pir/.harness/work/7abe8da0/benchmarks/.encode-work/out_c16/site
+1073741824	/home/shahar/projects/rc-pir/.harness/work/7abe8da0/benchmarks/.encode-work/out_c16/X.bin
+256

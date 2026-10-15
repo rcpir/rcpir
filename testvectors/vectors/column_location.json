@@ -1,0 +1,79 @@
+{
+ "format": "rc-pir-testvectors",
+ "version": 1,
+ "file": "column_location",
+ "spec": "docs/protocol.md \u00a72",
+ "description": "Column j of R is the L bytes at 'offset' in the shard at 'path' (shard j // columns_per_shard, 8 lowercase hex digits; offset (j % columns_per_shard) * L).",
+ "cases": [
+  {
+   "j": 0,
+   "columns_per_shard": 1,
+   "L": 8,
+   "path": "/rc-pir/r/00000000",
+   "offset": 0
+  },
+  {
+   "j": 5,
+   "columns_per_shard": 1,
+   "L": 8,
+   "path": "/rc-pir/r/00000005",
+   "offset": 0
+  },
+  {
+   "j": 4294967295,
+   "columns_per_shard": 1,
+   "L": 8,
+   "path": "/rc-pir/r/ffffffff",
+   "offset": 0
+  },
+  {
+   "j": 0,
+   "columns_per_shard": 16384,
+   "L": 4096,
+   "path": "/rc-pir/r/00000000",
+   "offset": 0
+  },
+  {
+   "j": 16383,
+   "columns_per_shard": 16384,
+   "L": 4096,
+   "path": "/rc-pir/r/00000000",
+   "offset": 67104768
+  },
+  {
+   "j": 16384,
+   "columns_per_shard": 16384,
+   "L": 4096,
+   "path": "/rc-pir/r/00000001",
+   "offset": 0
+  },
+  {
+   "j": 4294967295,
+   "columns_per_shard": 16384,
+   "L": 4096,
+   "path": "/rc-pir/r/0003ffff",
+   "offset": 67104768
+  },
+  {
+   "j": 158274,
+   "columns_per_shard": 158275,
+   "L": 424,
+   "path": "/rc-pir/r/00000000",
+   "offset": 67108176
+  },
+  {
+   "j": 158275,
+   "columns_per_shard": 158275,
+   "L": 424,
+   "path": "/rc-pir/r/00000001",
+   "offset": 0
+  },
+  {
+   "j": 2532399,
+   "columns_per_shard": 158275,
+   "L": 424,
+   "path": "/rc-pir/r/0000000f",
+   "offset": 67108176
+  }
+ ]
+}

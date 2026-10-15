@@ -1,0 +1,66 @@
+Working with: n=1024; db size=2^29 (l=14564, m=65536); logq=32; p=552; sigma=6.400000
+Total packed DB size is ~1036.379298 MB
+Executing DoublePIR
+Setup...
+		Offline download: 16384 KB
+Building query...
+	Elapsed: 76.266256ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 55.797518ms
+	Rate: 18573.931879 MB/s
+		Online download: 32.000000 KB
+Executing DoublePIR
+Setup...
+		Offline download: 16384 KB
+Building query...
+	Elapsed: 74.594024ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 56.537121ms
+	Rate: 18330.952833 MB/s
+		Online download: 32.000000 KB
+Executing DoublePIR
+Setup...
+		Offline download: 16384 KB
+Building query...
+	Elapsed: 110.146169ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 109.460061ms
+	Rate: 9468.104520 MB/s
+		Online download: 32.000000 KB
+Executing DoublePIR
+Setup...
+		Offline download: 16384 KB
+Building query...
+	Elapsed: 74.898792ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 58.429929ms
+	Rate: 17737.130886 MB/s
+		Online download: 32.000000 KB
+Executing DoublePIR
+Setup...
+		Offline download: 16384 KB
+Building query...
+	Elapsed: 97.127177ms
+		Online upload: 312.000000 KB
+Answering query...
+4-by-4855 vs. 14565-by-1024
+	Elapsed: 88.06585ms
+	Rate: 11768.231367 MB/s
+		Online download: 32.000000 KB
+Avg DoublePIR tput, except for first run: 15175.670297 MB/s
+Std dev of DoublePIR tput, except for first run: 3801.368626 MB/s
+goos: linux
+goarch: amd64
+pkg: github.com/ahenzinger/simplepir/pir
+cpu: Intel(R) Core(TM) i7-14700KF
+BenchmarkDoublePirSingle-28    	       1	144888752851 ns/op
+PASS
+ok  	github.com/ahenzinger/simplepir/pir	144.933s

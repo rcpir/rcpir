@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rcpir-encoder"
+version = "0.1.0"
+description = "Encoder for the sqrt(n) RC-PIR (LPN over F_2): X.bin, R = XH column files, params.json"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["rcpir-common", "numpy>=1.26", "cryptography>=42"]   # rcpir-common: ../common (pip install -e)
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+cuda = ["cupy-cuda12x[ctk]"]                    # --device cuda
+
+[project.scripts]
+rcpir-encode = "rcpir_encoder.cli:main"
+
+[project.urls]
+Repository = "https://github.com/rcpir/rcpir"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "../common/src"]
+testpaths = ["tests"]

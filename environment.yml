@@ -1,0 +1,11 @@
+# One conda env for all Python parts (common/, encoder/, testvectors/, e2e/):
+#   conda env create -p .env -f environment.yml
+#   .env/bin/pip install -e common -e encoder     # optional: the `rcpir-encode` command
+#   .env/bin/pip install "cupy-cuda12x[ctk]"      # optional: encoder --device cuda
+channels: [conda-forge]
+dependencies:
+  - python=3.12
+  - numpy
+  - cryptography
+  - pytest
+  - pip

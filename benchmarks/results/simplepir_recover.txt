@@ -1,0 +1,44 @@
+Working with: n=1024; db size=2^29 (l=30893, m=30895); logq=32; p=701; sigma=6.400000
+Total packed DB size is ~1075.574445 MB
+Executing SimplePIR
+Setup...
+	Elapsed: 2m36.444293513s
+		Offline download: 123572.000000 KB
+Building query...
+	Elapsed: 27.480771ms
+		Online upload: 120.000000 KB
+Answering query...
+	Elapsed: 54.682645ms
+	Rate: 19669.393183 MB/s
+		Online download: 120.000000 KB
+Reconstructing...
+Success!
+	Elapsed: 6.903549ms
+Executing SimplePIR
+Setup...
+	Elapsed: 2m39.757762113s
+		Offline download: 123572.000000 KB
+Building query...
+	Elapsed: 28.233432ms
+		Online upload: 120.000000 KB
+Answering query...
+	Elapsed: 53.727034ms
+	Rate: 20019.241055 MB/s
+		Online download: 120.000000 KB
+Reconstructing...
+Success!
+	Elapsed: 6.708534ms
+Executing SimplePIR
+Setup...
+	Elapsed: 2m35.244049528s
+		Offline download: 123572.000000 KB
+Building query...
+	Elapsed: 27.948342ms
+		Online upload: 120.000000 KB
+Answering query...
+	Elapsed: 48.739531ms
+	Rate: 22067.804567 MB/s
+		Online download: 120.000000 KB
+Reconstructing...
+Success!
+	Elapsed: 7.583696ms
