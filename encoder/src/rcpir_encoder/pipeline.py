@@ -195,11 +195,16 @@ def compute_r(X: np.ndarray, seed: bytes, site: Path, state: dict, progress_path
         log(f"  columns {state['columns_done']}/{m}, {time.perf_counter() - start:.1f} s")
 
 
+DIGEST_CHUNK = 64 << 20                 # r_digest reads the shards in chunks: RAM stays flat for one huge shard
+
+
 def r_digest(site: Path, m: int, cps: int) -> str:
     """`r_digest` of params.json: SHA-256 of the shards in order = of all m columns in index order."""
     h = hashlib.sha256()
     for k in range(-(-m // cps)):
-        h.update(shard_file(site, k).read_bytes())
+        with open(shard_file(site, k), "rb") as f:
+            while chunk := f.read(DIGEST_CHUNK):
+                h.update(chunk)
     return protocol.digest_tag(h.hexdigest())
 
 
