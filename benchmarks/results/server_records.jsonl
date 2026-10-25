@@ -1,0 +1,13 @@
+{"t":1048576,"L":1032,"threads":1,"batch":1,"reps":10,"ms_mean":26.340,"ms_std":0.559,"ms_per_query":26.340,"mib_s":38877}
+{"t":131072,"L":8200,"threads":1,"batch":1,"reps":10,"ms_mean":20.200,"ms_std":0.315,"ms_per_query":20.200,"mib_s":50694}
+{"t":16384,"L":65544,"threads":1,"batch":1,"reps":10,"ms_mean":22.389,"ms_std":0.266,"ms_per_query":22.389,"mib_s":45736}
+{"t":16777216,"L":72,"threads":1,"batch":1,"reps":10,"ms_mean":72.146,"ms_std":0.853,"ms_per_query":72.146,"mib_s":14193}
+{"t":2097152,"L":520,"threads":1,"batch":1,"reps":10,"ms_mean":29.494,"ms_std":0.285,"ms_per_query":29.494,"mib_s":34719}
+{"t":262144,"L":4104,"threads":1,"batch":1,"reps":10,"ms_mean":20.634,"ms_std":0.188,"ms_per_query":20.634,"mib_s":49627}
+{"t":32768,"L":32776,"threads":1,"batch":1,"reps":10,"ms_mean":22.240,"ms_std":0.292,"ms_per_query":22.240,"mib_s":46043}
+{"t":4096,"L":262152,"threads":1,"batch":1,"reps":10,"ms_mean":21.547,"ms_std":0.753,"ms_per_query":21.547,"mib_s":47523}
+{"t":4194304,"L":264,"threads":1,"batch":1,"reps":10,"ms_mean":34.738,"ms_std":0.196,"ms_per_query":34.738,"mib_s":29478}
+{"t":524288,"L":2056,"threads":1,"batch":1,"reps":10,"ms_mean":22.598,"ms_std":0.170,"ms_per_query":22.598,"mib_s":45314}
+{"t":65536,"L":16392,"threads":1,"batch":1,"reps":10,"ms_mean":19.645,"ms_std":0.177,"ms_per_query":19.645,"mib_s":52126}
+{"t":8192,"L":131080,"threads":1,"batch":1,"reps":10,"ms_mean":21.567,"ms_std":0.259,"ms_per_query":21.567,"mib_s":47480}
+{"t":8388608,"L":136,"threads":1,"batch":1,"reps":10,"ms_mean":44.187,"ms_std":0.724,"ms_per_query":44.187,"mib_s":23174}

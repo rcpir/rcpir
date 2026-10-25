@@ -1,0 +1,7 @@
+A: 30339 x 1024 uint32 = 124 MB
+secret 0.05 ms  gaussian 20.00 ms  A*secret 5.55 ms  add 0.02 ms  | full Query 25.70 ms
+secret 0.06 ms  gaussian 19.79 ms  A*secret 5.13 ms  add 0.02 ms  | full Query 25.12 ms
+secret 0.06 ms  gaussian 19.68 ms  A*secret 5.11 ms  add 0.02 ms  | full Query 25.05 ms
+secret 0.07 ms  gaussian 19.41 ms  A*secret 5.93 ms  add 0.03 ms  | full Query 24.43 ms
+secret 0.06 ms  gaussian 19.28 ms  A*secret 5.84 ms  add 0.02 ms  | full Query 24.28 ms
+secret 0.06 ms  gaussian 19.26 ms  A*secret 5.98 ms  add 0.02 ms  | full Query 24.72 ms

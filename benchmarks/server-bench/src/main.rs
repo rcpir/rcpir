@@ -1,10 +1,12 @@
 //! B2/B3: compute-server throughput, calling `CpuBackend` directly (no HTTP).
 //!
-//! Random 1 GiB `X` (contents do not affect the cost) and fresh uniform queries for every pass
-//! (`q_c = He + e_i` is pseudorandom). Prints one JSON line per (shape, threads, batch).
+//! Random `X` of T * L bytes (contents do not affect the cost) and fresh uniform queries for every
+//! pass (`q_c = He + e_i` is pseudorandom). Prints one JSON line per (shape, threads, batch).
 //!
 //! Usage: server-bench --shapes T1xL1,T2xL2 --threads 1,28 --batch 1,2,4 --reps 20
-//! (T = number of columns, L = column bytes, T * L = 1 GiB).
+//! (T = number of columns, L = column bytes). T * L is 1 GiB of records plus the block headers and
+//! padding (db_format.md §3), so it may exceed 1 GiB slightly; it must be at least 1 GiB and at most
+//! 1 GiB + 1/8. Throughput counts the 1 GiB of records, as SimplePIR counts its database.
 
 use std::time::Instant;
 
@@ -31,14 +33,20 @@ fn main() {
     let batches: Vec<usize> = list(&args, "--batch").iter().map(|s| s.parse().unwrap()).collect();
     let reps: usize = list(&args, "--reps")[0].parse().unwrap();
 
+    for &(t, _) in &shapes {
+        assert!(t % 8 == 0, "need 8 | t");
+    }
+    for &(t, l) in &shapes {
+        assert!(t * l >= DB_BYTES && t * l <= DB_BYTES + DB_BYTES / 8, "need 1 GiB <= t * L <= 1 GiB + 1/8");
+    }
     let mut rng = rand::rng();
-    let mut x = vec![0u8; DB_BYTES];
+    let max_bytes = shapes.iter().map(|&(t, l)| t * l).max().unwrap();
+    let mut x = vec![0u8; max_bytes];
     rng.fill_bytes(&mut x);
 
     for &(t, l) in &shapes {
-        assert!(t * l == DB_BYTES && t % 8 == 0, "need t * L = 1 GiB and 8 | t");
         for &th in &threads {
-            let backend = CpuBackend::new(x.clone(), t, l, th, None).unwrap();
+            let backend = CpuBackend::new(x[..t * l].to_vec(), t, l, th, None).unwrap();
             for &k in &batches {
                 let mut q = vec![vec![0u8; t / 8]; k];
                 let mut out = vec![vec![0u8; l]; k];

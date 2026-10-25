@@ -1,0 +1,8 @@
+Working with: n=1024; db size=2^29 (l=14392, m=65536); logq=32; p=552; sigma=6.400000
+Total packed DB size is ~1024.139719 MB
+Executing with entries consisting of 65536 (>= 1) bits; p is 552; packing factor is 0; number of DB elems per entry is 7196.
+		Offline download: 117899264 KB
+		Online upload: 256 KB
+		Online download: 230384 KB
+PASS
+ok  	github.com/ahenzinger/simplepir/pir	0.002s
