@@ -12,6 +12,7 @@ n = 2^33 bits (1 GiB), lambda = 128, Q = 2^32. Sizes in KiB unless noted.
 
 | record size | RC-PIR records per block | SimplePIR hint | DoublePIR hint | RC-PIR storage | SimplePIR online | DoublePIR online | RC-PIR online | queries until SimplePIR is cheaper | queries until DoublePIR is cheaper | SimplePIR server time | DoublePIR server time | RC-PIR server time | SimplePIR throughput | DoublePIR throughput | RC-PIR throughput |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 bit | 16384 | 120.7 MiB | 16 MiB | 16.1 GiB | 240 KiB | 344 KiB | 156.5 KiB | never | never | 45.8 ms | 55.5 ms | 22.6 ms | 21.8 GiB/s | 18.0 GiB/s | 44.3 GiB/s |
 | 64 B | 32 | 118.8 MiB | 912 MiB | 16.1 GiB | 236 KiB | 2.0 MiB | 156.5 KiB | never | never | 43.8 ms | 65.9 ms | 22.6 ms | 22.8 GiB/s | 15.2 GiB/s | 44.3 GiB/s |
 | 256 B | 8 | 118.7 MiB | 3.5 GiB | 16.1 GiB | 235 KiB | 7.3 MiB | 156.5 KiB | never | never | 44.5 ms | 63.1 ms | 22.6 ms | 22.5 GiB/s | 15.8 GiB/s | 44.3 GiB/s |
 | 1 KiB | 2 | 118.5 MiB | 14.1 GiB | 16.1 GiB | 235 KiB | 28.4 MiB | 156.5 KiB | never | never | 44.7 ms | 68.2 ms | 22.6 ms | 22.4 GiB/s | 14.7 GiB/s | 44.3 GiB/s |
@@ -28,6 +29,7 @@ Each cell: RC-PIR online communication per query (best number of records per blo
 
 | record size | c = 2 (2 GiB) | c = 4 (4 GiB) | c = 8 (8 GiB) | c = 16 (16 GiB) | c = 256 (256 GiB) |
 |---|---|---|---|---|---|
+| 1 bit | 311 KiB / 1,744 | 220 KiB / never | 187 KiB / never | 156 KiB / never | 112 KiB / never |
 | 64 B | 311 KiB / 1,625 | 220 KiB / never | 187 KiB / never | 156 KiB / never | 112 KiB / never |
 | 256 B | 311 KiB / 1,602 | 220 KiB / never | 187 KiB / never | 156 KiB / never | 112 KiB / never |
 | 1 KiB | 311 KiB / 1,600 | 220 KiB / never | 187 KiB / never | 156 KiB / never | 112 KiB / never |
@@ -36,44 +38,33 @@ Each cell: RC-PIR online communication per query (best number of records per blo
 | 16 KiB | 2,842 KiB / 64 | 1,433 KiB / 140 | 969 KiB / 231 | 728 KiB / 346 | 376 KiB / 1,287 |
 | 64 KiB | 11,204 KiB / 20 | 5,635 KiB / 40 | 3,779 KiB / 62 | 2,882 KiB / 83 | 1,474 KiB / 180 |
 
-Records per block (and so the server time) differ from table 1 (c = 16) only for c = 2: 64 B (16 instead of 32, server time 26.3 ms instead of 22.6 ms), 256 B (4 instead of 8, server time 26.3 ms instead of 22.6 ms), 1 KiB (1 instead of 2, server time 26.3 ms instead of 22.6 ms); c = 4: 64 B (16 instead of 32, server time 26.3 ms instead of 22.6 ms), 256 B (4 instead of 8, server time 26.3 ms instead of 22.6 ms), 1 KiB (1 instead of 2, server time 26.3 ms instead of 22.6 ms). Otherwise the server times of table 1 hold for every c.
+Records per block (and so the server time) differ from table 1 (c = 16) only for c = 2: 1 bit (8192 instead of 16384, server time 26.3 ms instead of 22.6 ms), 64 B (16 instead of 32, server time 26.3 ms instead of 22.6 ms), 256 B (4 instead of 8, server time 26.3 ms instead of 22.6 ms), 1 KiB (1 instead of 2, server time 26.3 ms instead of 22.6 ms); c = 4: 1 bit (8192 instead of 16384, server time 26.3 ms instead of 22.6 ms), 64 B (16 instead of 32, server time 26.3 ms instead of 22.6 ms), 256 B (4 instead of 8, server time 26.3 ms instead of 22.6 ms), 1 KiB (1 instead of 2, server time 26.3 ms instead of 22.6 ms). Otherwise the server times of table 1 hold for every c.
 
 ## 1c. Runtime per query for every storage factor c (best number of records per block for that c)
 
 - Server time: compute server, one query, one thread (as in table 1; it depends only on the block shape, not on c). SimplePIR: table 1.
 - Client time: RC-PIR client in Node, single thread, no network, mean of 100 queries: sample S, build the compute query (expand s columns of H, XOR), decode (XOR s + 1 blocks). Each configuration runs in its own Node process (`bench_client.mjs records`, `results/client_records.jsonl`).
-- SimplePIR/DoublePIR client: their Go client. Query build from the `*PirSingle` logs (mean of 5); SimplePIR decode = their `Recover` in their full flow `RunPIR` with the real hint, mean of 3 runs, each run alone (`./run_simplepir.sh recover-sweep`, `results/recover_sweep/`). DoublePIR decode not measured (its hint is 912 MiB to 899 GiB at these record sizes).
+- SimplePIR/DoublePIR client: their Go client. Query build from the `*PirSingle` logs (mean of 5); SimplePIR decode = their `Recover` in their full flow `RunPIR` with the real hint, mean of 3 runs, each run alone (`./run_simplepir.sh recover-sweep`, `results/recover_sweep/`). DoublePIR decode only for 1-bit entries (its hint is 912 MiB to 899 GiB at the other record sizes).
 
-| record size | server, c = 2 | server, c = 4 | server, c = 8 | server, c = 16 | server, c = 256 | SimplePIR server | client, c = 2 | client, c = 4 | client, c = 8 | client, c = 16 | client, c = 256 | SimplePIR client (query build + decode) | DoublePIR query build |
+| record size | server, c = 2 | server, c = 4 | server, c = 8 | server, c = 16 | server, c = 256 | SimplePIR server | client, c = 2 | client, c = 4 | client, c = 8 | client, c = 16 | client, c = 256 | SimplePIR client (query build + decode) | DoublePIR client (query build + decode) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 64 B | 26.3 ms | 26.3 ms | 22.6 ms | 22.6 ms | 22.6 ms | 43.8 ms | 38.6 ms | 18.3 ms | 6.6 ms | 4.9 ms | 2.5 ms | 32.1 ms (25.7 + 6.4) | 55.7 ms |
-| 256 B | 26.3 ms | 26.3 ms | 22.6 ms | 22.6 ms | 22.6 ms | 44.5 ms | 37.0 ms | 18.1 ms | 6.6 ms | 4.9 ms | 2.5 ms | 30.4 ms (25.1 + 5.3) | 55.6 ms |
-| 1 KiB | 26.3 ms | 26.3 ms | 22.6 ms | 22.6 ms | 22.6 ms | 44.7 ms | 36.5 ms | 18.0 ms | 6.7 ms | 4.9 ms | 2.4 ms | 33.0 ms (26.1 + 6.9) | 54.5 ms |
-| 4 KiB | 20.6 ms | 20.6 ms | 20.6 ms | 20.6 ms | 20.6 ms | 42.8 ms | 12.8 ms | 6.3 ms | 4.2 ms | 3.0 ms | 1.6 ms | 31.8 ms (24.7 + 7.1) | 55.6 ms |
-| 8 KiB | 20.2 ms | 20.2 ms | 20.2 ms | 20.2 ms | 20.2 ms | 44.6 ms | 9.5 ms | 4.9 ms | 3.2 ms | 2.4 ms | 1.2 ms | 30.7 ms (22.0 + 8.6) | 57.2 ms |
-| 16 KiB | 19.6 ms | 19.6 ms | 19.6 ms | 19.6 ms | 19.6 ms | 44.0 ms | 9.7 ms | 4.7 ms | 3.1 ms | 2.4 ms | 1.2 ms | 27.5 ms (18.2 + 9.3) | 54.5 ms |
-| 64 KiB | 22.4 ms | 22.4 ms | 22.4 ms | 22.4 ms | 22.4 ms | 44.1 ms | 18.1 ms | 9.6 ms | 6.1 ms | 4.7 ms | 2.3 ms | 27.7 ms (14.3 + 13.4) | n/a |
-
-## 1d. RC-PIR (c = 16): records per block chosen for communication vs for server time
-
-Same measurements as table 1 (one query, one thread); every power-of-two number of records per block with 2^12 <= number of blocks <= 2^24 was timed. Communication from the encoder's parameter selection.
-
-| record size | records per block (min. communication) | online | server time | records per block (min. server time) | online | server time | SimplePIR server time |
-|---|---|---|---|---|---|---|---|
-| 64 B | 32 | 156.5 KiB | 22.6 ms (44.3 GiB/s) | 256 | 728.5 KiB | 19.6 ms (50.9 GiB/s) | 43.8 ms (22.8 GiB/s) |
-| 256 B | 8 | 156.5 KiB | 22.6 ms (44.3 GiB/s) | 64 | 728.5 KiB | 19.6 ms (50.9 GiB/s) | 44.5 ms (22.5 GiB/s) |
-| 1 KiB | 2 | 156.5 KiB | 22.6 ms (44.3 GiB/s) | 16 | 728.5 KiB | 19.6 ms (50.9 GiB/s) | 44.7 ms (22.4 GiB/s) |
-| 4 KiB | 1 | 216.5 KiB | 20.6 ms (48.5 GiB/s) | 4 | 728.5 KiB | 19.6 ms (50.9 GiB/s) | 42.8 ms (23.4 GiB/s) |
-| 8 KiB | 1 | 384.5 KiB | 20.2 ms (49.5 GiB/s) | 2 | 728.5 KiB | 19.6 ms (50.9 GiB/s) | 44.6 ms (22.4 GiB/s) |
-| 16 KiB | 1 | 728.5 KiB | 19.6 ms (50.9 GiB/s) | 1 | 728.5 KiB | 19.6 ms (50.9 GiB/s) | 44.0 ms (22.7 GiB/s) |
-| 64 KiB | 1 | 2882.4 KiB | 22.4 ms (44.7 GiB/s) | 4 | 11264.9 KiB | 21.5 ms (46.4 GiB/s) | 44.1 ms (22.7 GiB/s) |
+| 1 bit | 26.3 ms | 26.3 ms | 22.6 ms | 22.6 ms | 22.6 ms | 45.8 ms | 10.7 ms | 5.2 ms | 2.3 ms | 1.7 ms | 0.8 ms | 32.6 ms (25.7 + 7.0) | 202.9 ms (66.1 + 136.8) |
+| 64 B | 26.3 ms | 26.3 ms | 22.6 ms | 22.6 ms | 22.6 ms | 43.8 ms | 10.2 ms | 4.6 ms | 2.2 ms | 1.6 ms | 0.8 ms | 32.1 ms (25.7 + 6.4) | 55.7 ms + decode n/a |
+| 256 B | 26.3 ms | 26.3 ms | 22.6 ms | 22.6 ms | 22.6 ms | 44.5 ms | 10.1 ms | 4.6 ms | 2.2 ms | 1.6 ms | 0.8 ms | 30.4 ms (25.1 + 5.3) | 55.6 ms + decode n/a |
+| 1 KiB | 26.3 ms | 26.3 ms | 22.6 ms | 22.6 ms | 22.6 ms | 44.7 ms | 10.7 ms | 4.9 ms | 2.2 ms | 1.7 ms | 0.9 ms | 33.0 ms (26.1 + 6.9) | 54.5 ms + decode n/a |
+| 4 KiB | 20.6 ms | 20.6 ms | 20.6 ms | 20.6 ms | 20.6 ms | 42.8 ms | 4.9 ms | 2.6 ms | 1.7 ms | 1.4 ms | 0.7 ms | 31.8 ms (24.7 + 7.1) | 55.6 ms + decode n/a |
+| 8 KiB | 20.2 ms | 20.2 ms | 20.2 ms | 20.2 ms | 20.2 ms | 44.6 ms | 4.5 ms | 2.3 ms | 1.6 ms | 1.2 ms | 0.6 ms | 30.7 ms (22.0 + 8.6) | 57.2 ms + decode n/a |
+| 16 KiB | 19.6 ms | 19.6 ms | 19.6 ms | 19.6 ms | 19.6 ms | 44.0 ms | 4.1 ms | 2.2 ms | 1.4 ms | 1.1 ms | 0.6 ms | 27.5 ms (18.2 + 9.3) | 54.5 ms + decode n/a |
+| 64 KiB | 22.4 ms | 22.4 ms | 22.4 ms | 22.4 ms | 22.4 ms | 44.1 ms | 4.7 ms | 2.3 ms | 1.7 ms | 1.3 ms | 0.7 ms | 27.7 ms (14.3 + 13.4) | n/a |
 
 ## 2. SimplePIR/DoublePIR layouts chosen by their `PickParams`
 
-Matrix of rows × columns over $\mathbb{Z}_p$; a record takes Ne (elements per record) consecutive elements of one column (9–10 bits each), so a column holds rows / Ne records. DoublePIR: their `SetupDB` sets X = Ne, so its hint ($\delta X n^2$ elements) and download grow linearly with the record size; for 64 KiB records its $m \ge$ `COMP_RATIO`$\cdot n = 65536$ columns exceed the $2^{14}$ records, so the matrix is padded to 4 GB.
+Matrix of rows × columns over $\mathbb{Z}_p$; a record takes Ne (elements per record) consecutive elements of one column (9–10 bits each), so a column holds rows / Ne records; 1-bit entries are packed several per element (their packing factor), so a column holds rows × packing. DoublePIR: their `SetupDB` sets X = Ne, so its hint ($\delta X n^2$ elements) and download grow linearly with the record size; for 64 KiB records its $m \ge$ `COMP_RATIO`$\cdot n = 65536$ columns exceed the $2^{14}$ records, so the matrix is padded to 4 GB.
 
 | record size | scheme | rows | columns | p | Ne | records per column | packed DB | hint | up | down |
 |---|---|---|---|---|---|---|---|---|---|---|
+| 1 bit | SimplePIR | 30893 | 30895 | 701 | 1 | 278037 | 1076 MB | 120.7 MiB | 120 | 120 |
+| 1 bit | DoublePIR | 14564 | 65536 | 552 | 1 | 131076 | 1036 MB | 16 MiB | 312 | 32 |
 | 64 B | SimplePIR | 30415 | 30339 | 701 | 55 | 553 | 1040 MB | 118.8 MiB | 118 | 118 |
 | 64 B | DoublePIR | 14592 | 65536 | 552 | 57 | 256 | 1038 MB | 912 MiB | 257 | 1824 |
 | 256 B | SimplePIR | 30380 | 29960 | 701 | 217 | 140 | 1026 MB | 118.7 MiB | 117 | 118 |
@@ -95,6 +86,11 @@ t = number of blocks, L = block size (4-byte header + records, rounded up to 8 b
 
 | record size | c | records per block | t | L (bytes) | s | storage | compute up | compute down | retrieval up | retrieval down | total | total with one record per block |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 bit | 2 | 8192 | 2^20 | 1032 | 180 | 2.0 GiB | 128.0 | 1.0 | 0.5 | 181.4 | 310.9 | infeasible |
+| 1 bit | 4 | 8192 | 2^20 | 1032 | 90 | 4.0 GiB | 128.0 | 1.0 | 0.2 | 90.7 | 220.0 | infeasible |
+| 1 bit | 8 | 16384 | 2^19 | 2056 | 60 | 8.0 GiB | 64.0 | 2.0 | 0.2 | 120.5 | 186.6 | infeasible |
+| 1 bit | 16 | 16384 | 2^19 | 2056 | 45 | 16.1 GiB | 64.0 | 2.0 | 0.1 | 90.4 | 156.5 | infeasible |
+| 1 bit | 256 | 16384 | 2^19 | 2056 | 23 | 257 GiB | 64.0 | 2.0 | 0.1 | 46.2 | 112.3 | infeasible |
 | 64 B | 2 | 16 | 2^20 | 1032 | 180 | 2.0 GiB | 128.0 | 1.0 | 0.5 | 181.4 | 310.9 | 2061.6 |
 | 64 B | 4 | 16 | 2^20 | 1032 | 90 | 4.0 GiB | 128.0 | 1.0 | 0.2 | 90.7 | 220.0 | 2054.8 |
 | 64 B | 8 | 32 | 2^19 | 2056 | 60 | 8.0 GiB | 64.0 | 2.0 | 0.2 | 120.5 | 186.6 | 2052.6 |
@@ -130,15 +126,3 @@ t = number of blocks, L = block size (4-byte header + records, rounded up to 8 b
 | 64 KiB | 8 | 1 | 2^14 | 65544 | 58 | 8.0 GiB | 2.0 | 64.0 | 0.1 | 3712.5 | 3778.6 | 3778.6 |
 | 64 KiB | 16 | 1 | 2^14 | 65544 | 44 | 16.0 GiB | 2.0 | 64.0 | 0.1 | 2816.3 | 2882.4 | 2882.4 |
 | 64 KiB | 256 | 1 | 2^14 | 65544 | 22 | 256.0 GiB | 2.0 | 64.0 | 0.1 | 1408.2 | 1474.2 | 1474.2 |
-
-## 4. Fixed shapes: one query returns one block of $\ell/8 - 4$ bytes
-
-Best power-of-two shape $t\times\ell$ per c. SimplePIR for comparison: one query returns a full column of its 1-bit-entry layout, 30893 elements × 9 bits ≈ 33.9 KiB, for 240 KiB online (`results/simplepir_bw.txt`).
-
-| c | t | ell | s | retrieval storage | compute up | compute down | retrieval up | retrieval down | total | data per query | comm / data |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2 | 2^20 | 2^13 | 180 | 2 GiB | 128.0 | 1.0 | 0.5 | 180.0 | 309.5 | 1020 B | 311× |
-| 4 | 2^20 | 2^13 | 90 | 4 GiB | 128.0 | 1.0 | 0.2 | 90.0 | 219.2 | 1020 B | 220× |
-| 8 | 2^19 | 2^14 | 60 | 8 GiB | 64.0 | 2.0 | 0.2 | 120.0 | 186.2 | 2.0 KiB | 93× |
-| 16 | 2^19 | 2^14 | 45 | 16 GiB | 64.0 | 2.0 | 0.1 | 90.0 | 156.1 | 2.0 KiB | 78× |
-| 256 | 2^19 | 2^14 | 23 | 256 GiB | 64.0 | 2.0 | 0.1 | 46.0 | 112.1 | 2.0 KiB | 56× |

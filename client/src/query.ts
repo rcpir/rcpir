@@ -1,7 +1,7 @@
 // The deterministic protocol steps (docs/protocol.md §2, §4; docs/db_format.md §3).
 // No I/O and no randomness: the caller supplies S, so conformance tests can drive them directly.
 
-import { flipBit, xorInto } from "./bits.js";
+import { flipBit, xorManyInto } from "./bits.js";
 import { RcPirError } from "./errors.js";
 import { hColumn } from "./h_prg.js";
 import type { Params } from "./params.js";
@@ -27,15 +27,15 @@ export async function buildComputeQuery(
     throw new RcPirError("bad-argument", "S must contain distinct indices in [0, m)");
   }
   const qc = new Uint8Array(Math.ceil(p.t / 8));
-  for (const col of await Promise.all(S.map((j) => hColumn(hKey, p.t, j)))) xorInto(qc, col);
+  xorManyInto(qc, await Promise.all(S.map((j) => hColumn(hKey, p.t, j))));
   flipBit(qc, i);
   return qc;
 }
 
 /** Column i of X = X q_c XOR (XOR of the retrieved columns R_{*,j}, j in S). */
 export function combineAnswers(computeAnswer: Uint8Array, retrieved: readonly Uint8Array[]): Uint8Array {
-  const col = computeAnswer.slice();
-  for (const r of retrieved) xorInto(col, r);
+  const col = computeAnswer.slice(); // a copy: the caller's buffer is left unchanged
+  xorManyInto(col, retrieved);
   return col;
 }
 

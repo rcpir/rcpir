@@ -4,63 +4,63 @@ Executing DoublePIR
 Setup...
 		Offline download: 16384 KB
 Building query...
-	Elapsed: 76.266256ms
+	Elapsed: 71.221827ms
 		Online upload: 312.000000 KB
 Answering query...
 4-by-4855 vs. 14565-by-1024
-	Elapsed: 55.797518ms
-	Rate: 18573.931879 MB/s
+	Elapsed: 59.633048ms
+	Rate: 17379.277651 MB/s
 		Online download: 32.000000 KB
 Executing DoublePIR
 Setup...
 		Offline download: 16384 KB
 Building query...
-	Elapsed: 74.594024ms
+	Elapsed: 63.195655ms
 		Online upload: 312.000000 KB
 Answering query...
 4-by-4855 vs. 14565-by-1024
-	Elapsed: 56.537121ms
-	Rate: 18330.952833 MB/s
+	Elapsed: 52.156554ms
+	Rate: 19870.547781 MB/s
 		Online download: 32.000000 KB
 Executing DoublePIR
 Setup...
 		Offline download: 16384 KB
 Building query...
-	Elapsed: 110.146169ms
+	Elapsed: 65.480004ms
 		Online upload: 312.000000 KB
 Answering query...
 4-by-4855 vs. 14565-by-1024
-	Elapsed: 109.460061ms
-	Rate: 9468.104520 MB/s
+	Elapsed: 56.303054ms
+	Rate: 18407.159554 MB/s
 		Online download: 32.000000 KB
 Executing DoublePIR
 Setup...
 		Offline download: 16384 KB
 Building query...
-	Elapsed: 74.898792ms
+	Elapsed: 64.20878ms
 		Online upload: 312.000000 KB
 Answering query...
 4-by-4855 vs. 14565-by-1024
-	Elapsed: 58.429929ms
-	Rate: 17737.130886 MB/s
+	Elapsed: 53.606141ms
+	Rate: 19333.219646 MB/s
 		Online download: 32.000000 KB
 Executing DoublePIR
 Setup...
 		Offline download: 16384 KB
 Building query...
-	Elapsed: 97.127177ms
+	Elapsed: 66.426641ms
 		Online upload: 312.000000 KB
 Answering query...
 4-by-4855 vs. 14565-by-1024
-	Elapsed: 88.06585ms
-	Rate: 11768.231367 MB/s
+	Elapsed: 55.814001ms
+	Rate: 18568.446622 MB/s
 		Online download: 32.000000 KB
-Avg DoublePIR tput, except for first run: 15175.670297 MB/s
-Std dev of DoublePIR tput, except for first run: 3801.368626 MB/s
+Avg DoublePIR tput, except for first run: 18711.730251 MB/s
+Std dev of DoublePIR tput, except for first run: 850.626895 MB/s
 goos: linux
 goarch: amd64
 pkg: github.com/ahenzinger/simplepir/pir
 cpu: Intel(R) Core(TM) i7-14700KF
-BenchmarkDoublePirSingle-28    	       1	144888752851 ns/op
+BenchmarkDoublePirSingle-28    	       1	135144165729 ns/op
 PASS
-ok  	github.com/ahenzinger/simplepir/pir	144.933s
+ok  	github.com/ahenzinger/simplepir/pir	135.192s
