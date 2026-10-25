@@ -4,58 +4,58 @@ Executing SimplePIR
 Setup...
 		Offline download: 123572 KB
 Building query...
-	Elapsed: 26.016637ms
+	Elapsed: 25.406865ms
 		Online upload: 120.000000 KB
 Answering query...
-	Elapsed: 45.756178ms
-	Rate: 23506.649633 MB/s
+	Elapsed: 50.375564ms
+	Rate: 21351.114695 MB/s
 		Online download: 120.000000 KB
 Executing SimplePIR
 Setup...
 		Offline download: 123572 KB
 Building query...
-	Elapsed: 26.583919ms
+	Elapsed: 25.53736ms
 		Online upload: 120.000000 KB
 Answering query...
-	Elapsed: 58.718405ms
-	Rate: 18317.501042 MB/s
+	Elapsed: 43.952074ms
+	Rate: 24471.528802 MB/s
 		Online download: 120.000000 KB
 Executing SimplePIR
 Setup...
 		Offline download: 123572 KB
 Building query...
-	Elapsed: 28.112585ms
+	Elapsed: 26.923063ms
 		Online upload: 120.000000 KB
 Answering query...
-	Elapsed: 63.741421ms
-	Rate: 16874.026778 MB/s
+	Elapsed: 48.856302ms
+	Rate: 22015.060509 MB/s
 		Online download: 120.000000 KB
 Executing SimplePIR
 Setup...
 		Offline download: 123572 KB
 Building query...
-	Elapsed: 26.740614ms
+	Elapsed: 25.276738ms
 		Online upload: 120.000000 KB
 Answering query...
-	Elapsed: 48.076718ms
-	Rate: 22372.043882 MB/s
+	Elapsed: 43.118068ms
+	Rate: 24944.866379 MB/s
 		Online download: 120.000000 KB
 Executing SimplePIR
 Setup...
 		Offline download: 123572 KB
 Building query...
-	Elapsed: 26.684826ms
+	Elapsed: 25.235651ms
 		Online upload: 120.000000 KB
 Answering query...
-	Elapsed: 49.559447ms
-	Rate: 21702.712800 MB/s
+	Elapsed: 42.825314ms
+	Rate: 25115.389575 MB/s
 		Online download: 120.000000 KB
-Avg SimplePIR tput, except for first run: 20554.586827 MB/s
-Std dev of SimplePIR tput, except for first run: 2525.355155 MB/s
+Avg SimplePIR tput, except for first run: 23579.591992 MB/s
+Std dev of SimplePIR tput, except for first run: 1576.836673 MB/s
 goos: linux
 goarch: amd64
 pkg: github.com/ahenzinger/simplepir/pir
 cpu: Intel(R) Core(TM) i7-14700KF
-BenchmarkSimplePirSingle-28    	       1	91329755439 ns/op
+BenchmarkSimplePirSingle-28    	       1	85296540215 ns/op
 PASS
-ok  	github.com/ahenzinger/simplepir/pir	91.355s
+ok  	github.com/ahenzinger/simplepir/pir	85.322s
