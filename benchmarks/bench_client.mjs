@@ -4,7 +4,8 @@
 // Every configuration runs in its own Node process, one after another: in a shared process V8's JIT
 // makes later configurations up to 40% slower (measured), so the order would matter.
 // Usage: (cd client && npm install && npm run build) && node benchmarks/bench_client.mjs [B ...]
-// (B: record sizes to run, as in comm_shapes.json, e.g. 1bit 64; default all).
+// (B: record sizes to run, as in comm_shapes.json, e.g. 1bit 64; default all). SHAPES=path reads the
+// shapes from another comm_shapes.json (default results/comm_shapes.json).
 
 import { randomBytes } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -13,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { buildComputeQuery, combineAnswers, decodeBlock, importHSeed, sampleSubset } from "../client/dist/index.js";
 
 const recordConfigs = () =>
-  JSON.parse(readFileSync(new URL("results/comm_shapes.json", import.meta.url)))
+  JSON.parse(readFileSync(process.env.SHAPES ?? new URL("results/comm_shapes.json", import.meta.url)))
     .map(({ B, c, g, t, L, m, s }) => ({ B, g, c, t, L, m, s }));
 
 // Driver: one child process ("one B c") per configuration, sequentially (execFileSync blocks).

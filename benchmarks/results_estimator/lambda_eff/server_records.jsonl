@@ -1,0 +1,6 @@
+{"t":1048576,"L":1032,"threads":1,"batch":1,"reps":10,"ms_mean":26.570,"ms_std":0.238,"ms_per_query":26.570,"mib_s":38540}
+{"t":131072,"L":8200,"threads":1,"batch":1,"reps":10,"ms_mean":20.600,"ms_std":0.324,"ms_per_query":20.600,"mib_s":49709}
+{"t":16384,"L":65544,"threads":1,"batch":1,"reps":10,"ms_mean":23.083,"ms_std":0.376,"ms_per_query":23.083,"mib_s":44361}
+{"t":262144,"L":4104,"threads":1,"batch":1,"reps":10,"ms_mean":22.119,"ms_std":0.336,"ms_per_query":22.119,"mib_s":46295}
+{"t":524288,"L":2056,"threads":1,"batch":1,"reps":10,"ms_mean":24.401,"ms_std":0.417,"ms_per_query":24.401,"mib_s":41966}
+{"t":65536,"L":16392,"threads":1,"batch":1,"reps":10,"ms_mean":20.795,"ms_std":0.340,"ms_per_query":20.795,"mib_s":49243}

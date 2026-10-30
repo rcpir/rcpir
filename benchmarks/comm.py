@@ -15,17 +15,39 @@ thread, one query), SimplePIR/DoublePIR from results/time_sweep/ (./run_simplepi
 Order: comm.py (shapes); run_server.sh records, node bench_client.mjs, run_simplepir.sh bw-sweep,
 time-sweep and recover-sweep; comm.py again.
 Usage: python3 benchmarks/comm.py > benchmarks/results/comm.md
+
+Optional environment (defaults: the spec's selection and benchmarks/results/):
+  RCPIR_LPN=estimator     choose s with the LPN estimator (lpn_estimator.py) instead of lpn.mode_a
+  RCPIR_LPN_TARGET=...    with RCPIR_LPN=estimator: lambda_eff (default, the spec's margins) or a number of bits
+  RCPIR_RESULTS=DIR       where comm_shapes.json is written and server/client times are read; SimplePIR/DoublePIR
+                          results are always read from benchmarks/results/
 """
 
+import functools
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RESULTS = ROOT / "benchmarks/results"
-sys.path[:0] = [str(ROOT / "encoder/src"), str(ROOT / "common/src")]
+RESULTS = ROOT / "benchmarks/results"                           # SimplePIR/DoublePIR measurements
+OURS = Path(os.environ.get("RCPIR_RESULTS", RESULTS))           # RC-PIR shapes and times
+OURS_NAME = os.path.relpath(OURS.resolve(), ROOT / "benchmarks")    # for captions, e.g. "results"
+sys.path[:0] = [str(ROOT / "encoder/src"), str(ROOT / "common/src"), str(ROOT / "benchmarks")]
 from rcpir_encoder import lpn  # noqa: E402
+
+if os.environ.get("RCPIR_LPN") == "estimator":
+    import lpn_estimator  # noqa: E402
+    TARGET = os.environ.get("RCPIR_LPN_TARGET", "lambda_eff")
+    SELECT = functools.partial(lpn_estimator.mode_estimator, target=TARGET)
+    SELECTION = (f"s chosen with the LPN estimator ({lpn_estimator.ESTIMATOR_DIR.name}, lpn_estimator.py): "
+                 + ("estimator bits >= lambda' = lambda + log2 Q + ceil(log2 t)" if TARGET == "lambda_eff"
+                    else f"estimator bits >= {TARGET} (single LPN instance, no margins for Q and t)")
+                 + ", and the spec's MITM and brute-force conditions.")
+else:
+    SELECT = lpn.mode_a
+    SELECTION = None
 
 LOG_N = 33                                      # 1 GiB
 DB_BYTES = 2 ** (LOG_N - 3)
@@ -69,7 +91,7 @@ def rc_layouts(B, c):
     while g <= n_rec:
         L = -(-(4 + -(-g * bits // 8)) // 8) * 8
         try:
-            out.append((g, lpn.mode_a(128, n_rec // g, 8 * L, c)))
+            out.append((g, SELECT(128, n_rec // g, 8 * L, c)))
         except lpn.Infeasible:
             pass
         g *= 2
@@ -134,7 +156,7 @@ def their_decode(scheme, B):
 
 def load_client_times():
     """RC-PIR client time per query (ms, mean of sample + query + decode) per (B, c), bench_client.mjs records."""
-    path = RESULTS / "client_records.jsonl"
+    path = OURS / "client_records.jsonl"
     if not path.exists():
         return {}
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -142,7 +164,7 @@ def load_client_times():
 
 
 def load_rc_times():
-    path = RESULTS / "server_records.jsonl"
+    path = OURS / "server_records.jsonl"
     if not path.exists():
         return {}
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
@@ -190,9 +212,11 @@ def mean(xs):
 
 shapes = [{"B": B, "c": c, "g": g, "t": sel.t, "L": sel.ell // 8, "m": sel.m, "s": sel.s}
           for (B, c), (g, sel) in best.items()]
-(RESULTS / "comm_shapes.json").write_text("[\n" + ",\n".join(json.dumps(d) for d in shapes) + "\n]\n")
+(OURS / "comm_shapes.json").write_text("[\n" + ",\n".join(json.dumps(d) for d in shapes) + "\n]\n")
 
 print(f"n = 2^{LOG_N} bits (1 GiB), lambda = 128, Q = 2^{lpn.LOG2_Q}. Sizes in KiB unless noted.\n")
+if SELECTION:
+    print(f"LPN parameters: {SELECTION}\n")
 
 # ---- Table 1: headline per record size ----
 print(f"## 1. Retrieving one fixed-size record (RC-PIR with c = {HEADLINE_C}, best number of records per block)\n")
@@ -212,7 +236,7 @@ print("- Hint: one-time download before the first query (SimplePIR/DoublePIR onl
       "and 2.8 min for DoublePIR with 1-bit entries, and the client's storage for it are not counted); upload and download are added, the hint counts as download.\n"
       "- Server time: one query, one thread, mean (throughput = 1 GiB of records / mean time). SimplePIR/"
       "DoublePIR: the 5 answer times of their `*PirSingle` benchmark (`results/time_sweep/`); RC-PIR: compute "
-      "server, 10 passes on the shape of this row (`results/server_records.jsonl`). The retrieval server only "
+      f"server, 10 passes on the shape of this row (`{OURS_NAME}/server_records.jsonl`). The retrieval server only "
       "serves static byte ranges and is not timed.\n- Throughput: 1 GiB of records / mean server time, as in SimplePIR.\n")
 print("| record size | RC-PIR records per block "
       "| SimplePIR hint | DoublePIR hint | RC-PIR storage "
@@ -277,7 +301,7 @@ if rc_times and client_times:
           "shape, not on c). SimplePIR: table 1.\n"
           "- Client time: RC-PIR client in Node, single thread, no network, mean of 100 queries: sample S, build "
           "the compute query (expand s columns of H, XOR), decode (XOR s + 1 blocks). Each configuration runs in "
-          "its own Node process (`bench_client.mjs records`, `results/client_records.jsonl`).\n"
+          f"its own Node process (`bench_client.mjs records`, `{OURS_NAME}/client_records.jsonl`).\n"
           "- SimplePIR/DoublePIR client: their Go client. Query build from the `*PirSingle` logs (mean of 5); "
           "SimplePIR decode = their `Recover` in their full flow `RunPIR` with the real hint, mean of 3 runs, each "
           "run alone (`./run_simplepir.sh recover-sweep`, `results/recover_sweep/`). DoublePIR decode only for "
