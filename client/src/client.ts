@@ -158,9 +158,12 @@ export class RcPirClient {
         L,
       );
       // One single-range GET per column (CORS-safelisted: no preflight); the host must answer 206.
+      // cache: "no-store": with the default mode, Chromium's HTTP cache queues concurrent range requests to the same
+      // URL (measured on rcpir.github.io: ~0.5 s per lookup instead of ~0.12 s; ~4.6 s with all of R in one file).
+      // Caching is useless here anyway: S is fresh and random for every lookup.
       const columnRequests = S.map((j) => {
         const { path, offset } = columnLocation(j, columns_per_shard, L);
-        const range = { headers: { Range: `bytes=${offset}-${offset + L - 1}` } };
+        const range: RequestInit = { headers: { Range: `bytes=${offset}-${offset + L - 1}` }, cache: "no-store" };
         return fetchBytes(new URL(path, this.retrieval), signal, range, L, 206);
       });
       return Promise.all([computeRequest, ...columnRequests]);
