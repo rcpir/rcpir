@@ -57,15 +57,10 @@ The zone's request logs (Observability) record **path, time and client IP, but n
   "clientRequestHTTPHost": "<host>:443", "clientIP": "<ip>", "clientCountryName": "IL", "cacheStatus": "hit" }
 ```
 
-R2 Data Access Logs (opt-in, 7 days) have no range field either. Cloudflare itself sees the ranges.
-
-With several shards, the account owner therefore learns how many elements of $S$ fall into each shard. Options:
-
-| Option | Requests per lookup | Notes |
-|---|---|---|
-| A. Fixed number of noise positions per shard | 88 | Changes the noise distribution (−35 bits of entropy); needs a new security analysis |
-| B. Pad every shard to $K$ requests (redraw $S$ if a shard exceeds $K$) | 230 at $K=16$ | Uniform noise conditioned on an event of probability 99.8%: loss ≤ 0.003 bits |
-| C. One object ≤ 512 MB (constant path) | 176 ($c=2$, $R$ = 475 MB) | Unchanged noise; 2× requests |
+R2 Data Access Logs (opt-in, 7 days) have no range field either. Cloudflare itself sees the ranges. The zone owner
+can still log them without code: Logpush custom fields (listed for all plans) cannot log the `Range` request header
+but can log the `Content-Range` response header, which reveals $S$ exactly. Privacy of $S$ from the operator
+therefore rests on trust (see Verifiability).
 
 ## Verifiability
 
