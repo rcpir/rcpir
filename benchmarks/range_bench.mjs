@@ -24,6 +24,8 @@
 //                  needs CORS on the host, like a deployed client), auto (vendor if it works; default)
 //   --chrome PATH  Chromium binary (default: $CHROME or Playwright's headless shell)
 //   --json FILE    also write all per-request records as JSON
+//   --header "Name: value"  extra request header, repeatable (node engine only; browsers forbid e.g. Cookie),
+//                  e.g. a guest session cookie for a cloud drive
 // Every response is checked: status 206, Content-Range of the requested range, body of exactly --len bytes. If a
 // cross-origin page cannot read Content-Range (not in Access-Control-Expose-Headers), status and length are checked,
 // as the client does, and object sizes must be given with --size.
@@ -41,7 +43,7 @@ import { randomInt } from "node:crypto";
 // ---------------------------------------------------------------------------------------------- options
 const argv = process.argv.slice(2);
 const opt = { engine: "node", s: 88, len: 4096, queries: 5, gap: 500, warm: true, size: null, cache: "default",
-              h1Conns: 6, page: "auto", chrome: process.env.CHROME || null, json: null, urls: [] };
+              h1Conns: 6, page: "auto", chrome: process.env.CHROME || null, json: null, headers: {}, urls: [] };
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i], next = () => argv[++i];
   if (a === "--engine") opt.engine = next();
@@ -53,6 +55,7 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--size") opt.size = +next();
   else if (a === "--cache") opt.cache = next();
   else if (a === "--h1-conns") opt.h1Conns = +next();
+  else if (a === "--header") { const h = next(), k = h.indexOf(":"); opt.headers[h.slice(0, k).trim().toLowerCase()] = h.slice(k + 1).trim(); }
   else if (a === "--page") opt.page = next();
   else if (a === "--chrome") opt.chrome = next();
   else if (a === "--json") opt.json = next();
@@ -67,6 +70,7 @@ function usage(msg) {
 if (!opt.urls.length) usage("no URL given");
 if (!["node", "browser"].includes(opt.engine)) usage("--engine must be node or browser");
 if (!["auto", "vendor", "local"].includes(opt.page)) usage("--page must be auto, vendor or local");
+if (Object.keys(opt.headers).length && opt.engine !== "node") usage("--header works with --engine node only");
 if (!opt.warm && !opt.size) usage("--no-warm needs --size (object sizes are discovered by the warm-up requests)");
 const origins = [...new Set(opt.urls.map((u) => new URL(u).origin))];
 if (origins.length > 1) usage(`all URLs must be on one origin (got ${origins.join(", ")})`);
@@ -135,7 +139,7 @@ async function nodeEngine() {
       const rec = { start, protocol: conn.alpn };
       const done = (extra) => resolve(Object.assign(rec, { end: performance.now() }, extra));
       if (session) {
-        const req = session.request({ ":path": p.pathname + p.search, range });
+        const req = session.request({ ":path": p.pathname + p.search, ...opt.headers, range });
         const chunks = [];
         req.on("response", (h) => Object.assign(rec, { ttfb: performance.now(), status: h[":status"],
           contentRange: h["content-range"], headers: pick(h) }));
@@ -144,7 +148,7 @@ async function nodeEngine() {
         req.on("error", (e) => done({ error: String(e) }));
         req.end();
       } else {
-        const req = https.request(url, { agent, headers: { range } }, (res) => {
+        const req = https.request(url, { agent, headers: { ...opt.headers, range } }, (res) => {
           sessions.add(res.socket);
           Object.assign(rec, { ttfb: performance.now(), status: res.statusCode,
                                contentRange: res.headers["content-range"], headers: pick(res.headers) });
