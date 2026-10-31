@@ -15,6 +15,28 @@ export function columnLocation(j: number, columnsPerShard: number, L: number): {
   return { path: `/rc-pir/r/${shard.toString(16).padStart(8, "0")}`, offset: (j % columnsPerShard) * L };
 }
 
+/** H e = XOR of the columns H_{*,j} for j in S: the part of q_c that does not depend on the index. */
+export async function buildHe(p: Pick<Params, "t" | "m">, hKey: CryptoKey, S: readonly number[]): Promise<Uint8Array> {
+  if (S.some((j) => !Number.isInteger(j) || j < 0 || j >= p.m) || new Set(S).size !== S.length) {
+    throw new RcPirError("bad-argument", "S must contain distinct indices in [0, m)");
+  }
+  const he = new Uint8Array(Math.ceil(p.t / 8));
+  xorManyInto(he, await Promise.all(S.map((j) => hColumn(hKey, p.t, j))));
+  return he;
+}
+
+export function checkIndex(p: Pick<Params, "t">, i: number): void {
+  if (!Number.isInteger(i) || i < 0 || i >= p.t) throw new RcPirError("bad-argument", `index ${i} not in [0, ${p.t})`);
+}
+
+/** q_c = H e + e_i: a copy of H e with bit i flipped. */
+export function addIndex(p: Pick<Params, "t">, he: Uint8Array, i: number): Uint8Array {
+  checkIndex(p, i);
+  const qc = he.slice();
+  flipBit(qc, i);
+  return qc;
+}
+
 /** q_c = XOR of the columns H_{*,j} for j in S, with bit i flipped. */
 export async function buildComputeQuery(
   p: Pick<Params, "t" | "m">,
@@ -22,14 +44,8 @@ export async function buildComputeQuery(
   S: readonly number[],
   i: number,
 ): Promise<Uint8Array> {
-  if (!Number.isInteger(i) || i < 0 || i >= p.t) throw new RcPirError("bad-argument", `index ${i} not in [0, ${p.t})`);
-  if (S.some((j) => !Number.isInteger(j) || j < 0 || j >= p.m) || new Set(S).size !== S.length) {
-    throw new RcPirError("bad-argument", "S must contain distinct indices in [0, m)");
-  }
-  const qc = new Uint8Array(Math.ceil(p.t / 8));
-  xorManyInto(qc, await Promise.all(S.map((j) => hColumn(hKey, p.t, j))));
-  flipBit(qc, i);
-  return qc;
+  checkIndex(p, i); // before the work, as before
+  return addIndex(p, await buildHe(p, hKey, S), i);
 }
 
 /** Column i of X = X q_c XOR (XOR of the retrieved columns R_{*,j}, j in S). */

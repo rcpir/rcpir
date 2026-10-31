@@ -2,7 +2,10 @@
 // rcpir-get: retrieve one block privately (Node >= 19).
 //
 //   rcpir-get --retrieval URL --compute URL --index i [--out FILE] [--pin-sha256 HEX] [--timeout-ms MS]
+//             [--gdrive-file ID]
 //
+// --gdrive-file: read the columns of R from this Google Drive file (all of R in one file) through the Drive API,
+// with the API key from the environment variable RCPIR_GDRIVE_KEY. params.json still comes from --retrieval.
 // Writes the payload to FILE, or to stdout. --timeout-ms bounds each of the two phases
 // (params discovery, retrieval); default 30000. For self-signed development certificates
 // set NODE_EXTRA_CA_CERTS=/path/to/ca.pem.
@@ -10,8 +13,10 @@
 import { writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { RcPirClient } from "./client.js";
+import { GoogleDrive } from "./providers.js";
 
-const USAGE = "usage: rcpir-get --retrieval URL --compute URL --index i [--out FILE] [--pin-sha256 HEX] [--timeout-ms MS]";
+const USAGE =
+  "usage: rcpir-get --retrieval URL --compute URL --index i [--out FILE] [--pin-sha256 HEX] [--timeout-ms MS] [--gdrive-file ID]";
 
 let args;
 try {
@@ -23,6 +28,7 @@ try {
       out: { type: "string" },
       "pin-sha256": { type: "string" },
       "timeout-ms": { type: "string" },
+      "gdrive-file": { type: "string" },
     },
   }));
 } catch (e) {
@@ -36,8 +42,10 @@ if (!args.retrieval || !args.compute || !/^\d+$/.test(args.index ?? "") || !time
 }
 
 try {
+  const gdrive = args["gdrive-file"];
   const opts = {
     retrieval: args.retrieval,
+    provider: gdrive === undefined ? undefined : new GoogleDrive(gdrive, process.env["RCPIR_GDRIVE_KEY"] ?? ""),
     compute: args.compute,
     pinSha256: args["pin-sha256"],
     timeoutMs: args["timeout-ms"] === undefined ? undefined : Number(args["timeout-ms"]),

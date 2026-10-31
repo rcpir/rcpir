@@ -120,8 +120,10 @@ export async function startServers(db: MockDb, faults: Faults = {}): Promise<Moc
   const retrieval = await listen(async (req, res) => {
     if (req.url === "/.well-known/rc-pir.json") return void res.end(db.paramsBytes);
     if (faults.columnDelayMs) await new Promise((ok) => setTimeout(ok, faults.columnDelayMs));
-    const C = db.columnsPerShard;
-    const shard = parseInt(req.url?.match(/^\/rc-pir\/r\/([0-9a-f]{8})$/)?.[1] ?? "ffffffff", 16);
+    // /all (any query string): all of R as one object, the single-file layout of providers like GoogleDrive.
+    const all = req.url?.split("?")[0] === "/all";
+    const C = all ? db.m : db.columnsPerShard;
+    const shard = all ? 0 : parseInt(req.url?.match(/^\/rc-pir\/r\/([0-9a-f]{8})$/)?.[1] ?? "ffffffff", 16);
     if (shard * C >= db.m) return void res.writeHead(404).end();
     const body = Buffer.concat(db.R.slice(shard * C, (shard + 1) * C));
     if (faults.ignoreRange) return void res.writeHead(200).end(body);

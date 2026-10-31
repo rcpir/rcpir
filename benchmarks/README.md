@@ -11,7 +11,6 @@
 | `./run_simplepir.sh time-sweep` | Their `*PirSingle` benchmark (5 answers, single thread) at the same record sizes | `results/time_sweep/` |
 | `(cd simplepir-query-split && go run .)` | Time of the steps of SimplePIR's client `Query` (their functions, 64-byte records; needs `simplepir/` from `run_simplepir.sh`) | `results/simplepir_query_split.txt` |
 | `node range_bench.mjs [--engine node\|browser] [--cache default\|no-store] [--page auto\|vendor\|local] URL ...` | Retrieval host: one lookup = `--s` concurrent random ranges of `--len` bytes over the given objects, after a 1-byte warm-up request per object (as the demo site does). `node`: one HTTP/2 session with Chrome's flow-control windows (6 HTTP/1.1 connections if the host has no HTTP/2); `browser`: headless Chromium `fetch()`, from a page on the host's origin or (`--page local`) a cross-origin page on 127.0.0.1 like a deployed client. Checks every 206 and Content-Range | stdout, `--json FILE` |
-| `node site_lookup.mjs [--site URL] [TITLE ...]` | Reference for `range_bench.mjs`: real lookups on the demo site in headless Chromium, retrieval / compute / total from Resource Timing | stdout |
 | `./run_simplepir.sh recover-sweep` | Their decode time at the same record sizes: their `RunPIR` with the real hint (`simplepir-recover/`, ≈ 3.8 min per run; `REPS`, `RECORD_SIZES`, `SCHEMES` select runs) | `results/recover_sweep/` (appended) |
 
 Throughput is defined as in SimplePIR: database size × queries / server time. The retrieval

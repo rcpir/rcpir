@@ -4,7 +4,8 @@ import { fromHex } from "./bits.js";
 import { RcPirError } from "./errors.js";
 import { importHSeed } from "./h_prg.js";
 import { isInsecure, parseParams, sha256Hex, type Params } from "./params.js";
-import { buildComputeQuery, columnLocation, combineAnswers, decodeBlock } from "./query.js";
+import type { RetrievalProvider } from "./providers.js";
+import { addIndex, buildHe, checkIndex, columnLocation, combineAnswers, decodeBlock } from "./query.js";
 import { sampleSubset } from "./sample.js";
 
 export const DEFAULT_TIMEOUT_MS = 30_000;
@@ -12,6 +13,11 @@ export const DEFAULT_TIMEOUT_MS = 30_000;
 export interface ClientOptions {
   /** Origin of the retrieval (static) server, e.g. "https://static.example.org". */
   retrieval: string;
+  /**
+   * Where the columns of R are (providers.ts). Default: the shards on the retrieval origin. params.json is always
+   * read from the retrieval origin.
+   */
+  provider?: RetrievalProvider;
   /** Origin of the compute server, e.g. "https://compute.example.org". */
   compute: string;
   /** Expected SHA-256 (hex) of the params.json bytes. */
@@ -47,6 +53,9 @@ async function withDeadline<T>(timeoutMs: number, run: (signal: AbortSignal) => 
   }
 }
 
+/** URL for error messages: without the query string, which may hold an API key (GoogleDrive). */
+const shown = (url: URL) => url.origin + url.pathname;
+
 /** Maps a rejection of fetch() or of reading the body to an RcPirError. */
 function requestError(url: URL, signal: AbortSignal, e: unknown): RcPirError {
   if (signal.aborted && signal.reason instanceof RcPirError) return signal.reason; // our timeout
@@ -54,7 +63,7 @@ function requestError(url: URL, signal: AbortSignal, e: unknown): RcPirError {
   // fetch") without details (CORS failures look the same).
   const cause = e instanceof Error && e.cause instanceof Error ? `: ${e.cause.message}` : "";
   const msg = e instanceof Error ? e.message : String(e);
-  return new RcPirError("network", `request to ${url} failed: ${msg}${cause}`, { cause: e });
+  return new RcPirError("network", `request to ${shown(url)} failed: ${msg}${cause}`, { cause: e });
 }
 
 /**
@@ -77,7 +86,7 @@ async function fetchBytes(
   if (res.status !== status) {
     // Release the connection without reading the body (e.g. a whole shard if Range was ignored).
     res.body?.cancel().catch(() => {});
-    throw new RcPirError("http-status", `HTTP ${res.status} from ${url}`);
+    throw new RcPirError("http-status", `HTTP ${res.status} from ${shown(url)}`);
   }
   let body: Uint8Array;
   try {
@@ -86,7 +95,7 @@ async function fetchBytes(
     throw requestError(url, signal, e);
   }
   if (length !== undefined && body.length !== length) {
-    throw new RcPirError("bad-length", `${body.length} bytes from ${url}, expected ${length}`);
+    throw new RcPirError("bad-length", `${body.length} bytes from ${shown(url)}, expected ${length}`);
   }
   return [body, res];
 }
@@ -109,12 +118,14 @@ export class RcPirClient {
   private readonly retrieval: URL;
   private readonly compute: URL;
   private readonly timeoutMs: number;
+  private readonly provider: RetrievalProvider | undefined;
 
   private constructor(readonly params: Params, private readonly hKey: CryptoKey, opts: ClientOptions) {
     this.insecure = isInsecure(params);
     this.retrieval = toOrigin(opts.retrieval);
     this.compute = toOrigin(opts.compute);
     this.timeoutMs = checkTimeout(opts.timeoutMs);
+    this.provider = opts.provider;
   }
 
   /** Fetches /.well-known/rc-pir.json from both origins; the two copies must be identical. */
@@ -143,36 +154,99 @@ export class RcPirClient {
     return new RcPirClient(params, await importHSeed(fromHex(params.h_seed)), opts);
   }
 
-  /** Retrieves the payload of block i. */
-  async retrieve(i: number): Promise<Uint8Array> {
-    const { L, m, s, columns_per_shard } = this.params;
+  /**
+   * Starts a lookup without the index: samples a fresh S, computes H e and downloads the s columns of R. It reveals
+   * nothing about the block that will be read, so it can run while the user picks one; pass the result to
+   * retrieve(). onColumn(done, s) is called after each downloaded column (progress display).
+   */
+  prepare(onColumn?: (done: number, total: number) => void): Prepared {
+    const { L, m, s } = this.params;
     const S = sampleSubset(m, s);
-    const qc = await buildComputeQuery(this.params, this.hKey, S, i);
+    let done = 0;
+    const columns = withDeadline(this.timeoutMs, (signal) =>
+      Promise.all(
+        S.map(async (j) => {
+          // One single-range GET per column (CORS-safelisted: no preflight); the host must answer 206.
+          // cache: "no-store": with the default mode, Chromium's HTTP cache queues concurrent range requests to the
+          // same URL (measured on rcpir.github.io: ~0.5 s per lookup instead of ~0.12 s; ~4.6 s with all of R in one
+          // file). Caching is useless here anyway: S is fresh and random for every lookup.
+          const { url, offset } = this.locate(j);
+          const range: RequestInit = { headers: { Range: `bytes=${offset}-${offset + L - 1}` }, cache: "no-store" };
+          const [col] = await fetchBytes(url, signal, range, L, 206);
+          onColumn?.(++done, s);
+          return col;
+        }),
+      ),
+    );
+    return new Prepared(this, S, buildHe(this.params, this.hKey, S), columns);
+  }
 
-    // All s + 1 requests are sent concurrently, under one deadline.
-    const [[answer, res], ...columns] = await withDeadline(this.timeoutMs, (signal) => {
-      const computeRequest = fetchBytes(
-        new URL("/rc-pir/query", this.compute),
-        signal,
-        { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: qc as BufferSource },
-        L,
-      );
-      // One single-range GET per column (CORS-safelisted: no preflight); the host must answer 206.
-      // cache: "no-store": with the default mode, Chromium's HTTP cache queues concurrent range requests to the same
-      // URL (measured on rcpir.github.io: ~0.5 s per lookup instead of ~0.12 s; ~4.6 s with all of R in one file).
-      // Caching is useless here anyway: S is fresh and random for every lookup.
-      const columnRequests = S.map((j) => {
-        const { path, offset } = columnLocation(j, columns_per_shard, L);
-        const range: RequestInit = { headers: { Range: `bytes=${offset}-${offset + L - 1}` }, cache: "no-store" };
-        return fetchBytes(new URL(path, this.retrieval), signal, range, L, 206);
-      });
-      return Promise.all([computeRequest, ...columnRequests]);
-    });
+  /**
+   * Retrieves the payload of block i. `prepared` comes from prepare() and is used once; without it, a fresh one is
+   * made, so the column downloads and the compute query run concurrently.
+   */
+  async retrieve(i: number, prepared?: Prepared): Promise<Uint8Array> {
+    checkIndex(this.params, i);
+    const p = prepared ?? this.prepare();
+    // Single use: a second query with the same S for another index i' would reveal e_i + e_i'.
+    if (!p.claim(this)) throw new RcPirError("bad-argument", "prepared lookup already used or from another client");
+    const qc = addIndex(this.params, await p.he, i);
+    p.query = qc;
+
+    // The compute query and the (remaining) column downloads, under one deadline: the first failure aborts the query.
+    const [[answer, res], columns] = await withDeadline(this.timeoutMs, (signal) =>
+      Promise.all([
+        fetchBytes(
+          new URL("/rc-pir/query", this.compute),
+          signal,
+          { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: qc as BufferSource },
+          this.params.L,
+        ),
+        p.columns,
+      ]),
+    );
 
     const digest = res.headers.get("RC-PIR-DB-Digest");
     if (digest !== this.params.db_digest) {
       throw new RcPirError("digest-mismatch", `compute server has DB ${digest}, params.json has ${this.params.db_digest}`);
     }
-    return decodeBlock(combineAnswers(answer, columns.map(([col]) => col)));
+    return decodeBlock(combineAnswers(answer, columns));
+  }
+
+  /** URL and byte offset of column j: from the provider, or the shards on the retrieval origin. */
+  private locate(j: number): { url: URL; offset: number } {
+    if (this.provider) return this.provider.locate(j, this.params);
+    const { path, offset } = columnLocation(j, this.params.columns_per_shard, this.params.L);
+    return { url: new URL(path, this.retrieval), offset };
+  }
+}
+
+/** A lookup prepared by RcPirClient.prepare(): S, H e and the s columns (downloaded or in flight). */
+export class Prepared {
+  /** Resolves when all s columns are downloaded; rejects on the first failure. */
+  readonly ready: Promise<void>;
+  /** The compute query q_c = H e + e_i sent by retrieve() (for display); null until then. */
+  query: Uint8Array | null = null;
+  private owner: RcPirClient | null;
+
+  /** @internal */
+  constructor(
+    owner: RcPirClient,
+    /** The column indices S, chosen independently of the block (for display). */
+    readonly S: readonly number[],
+    /** @internal */ readonly he: Promise<Uint8Array>,
+    /** @internal */ readonly columns: Promise<Uint8Array[]>,
+  ) {
+    this.owner = owner;
+    this.ready = columns.then(() => undefined);
+    // Failures reach the caller through retrieve() or ready; never as unhandled rejections.
+    for (const promise of [he, columns, this.ready]) promise.catch(() => {});
+  }
+
+  /** @internal Marks the set as used by `client`; false if it was used before or belongs to another client. */
+  claim(client: RcPirClient): boolean {
+    if (this.owner !== client) return false;
+    this.owner = null;
+    return true;
   }
 }
