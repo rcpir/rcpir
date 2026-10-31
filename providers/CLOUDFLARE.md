@@ -57,7 +57,9 @@ The zone's request logs (Observability) record **path, time and client IP, but n
   "clientRequestHTTPHost": "<host>:443", "clientIP": "<ip>", "clientCountryName": "IL", "cacheStatus": "hit" }
 ```
 
-R2 Data Access Logs (opt-in, 7 days) have no range field either. Cloudflare itself sees the ranges.
+R2 Data Access Logs (opt-in, 7 days) have no range field either. Cloudflare itself sees the ranges. The zone owner
+can still log them without code: Logpush custom fields (listed for all plans) cannot log the `Range` request header
+but can log the `Content-Range` response header, so the options below only hide shard counts from the default logs.
 
 With several shards, the account owner therefore learns how many elements of $S$ fall into each shard. Options:
 
