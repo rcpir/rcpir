@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { after, before, describe, test } from "node:test";
 import { RcPirClient } from "../src/client.js";
 import { RcPirError } from "../src/errors.js";
+import type { RetrievalProvider } from "../src/providers.js";
 import { isWellFormed, makeDb, samplePayloads, startServers, type Faults, type MockDb } from "./helpers.js";
 
 const isCode = (code: string) => (e: unknown) => e instanceof RcPirError && e.code === code;
@@ -56,6 +57,61 @@ describe("RcPirClient", () => {
     assert.deepEqual(await c.retrieve(7), db.payloads[7]);
   });
 
+  test("provider: columns from one object with all of R (GoogleDrive layout), params from the retrieval origin", async () => {
+    const located: number[] = [];
+    const provider: RetrievalProvider = {
+      name: "test",
+      locate(j, p) {
+        located.push(j);
+        return { url: new URL("/all?key=SECRET", srv.retrieval), offset: j * p.L };
+      },
+    };
+    const c = await RcPirClient.connect({ retrieval: srv.retrieval, compute: srv.compute, provider });
+    for (const i of [0, 6, db.t - 1]) assert.deepEqual(await c.retrieve(i), db.payloads[i], `block ${i}`);
+    assert.equal(located.length, 3 * db.s);
+  });
+
+  test("provider: error messages do not show the URL's query string (API keys)", async () => {
+    const provider: RetrievalProvider = {
+      name: "test",
+      locate: (j, p) => ({ url: new URL("/missing?key=SECRET", srv.retrieval), offset: j * p.L }),
+    };
+    const c = await RcPirClient.connect({ retrieval: srv.retrieval, compute: srv.compute, provider });
+    await assert.rejects(c.retrieve(0), (e) => isCode("http-status")(e) && !(e as Error).message.includes("SECRET"));
+  });
+
+  test("prepare: columns downloaded ahead with progress; retrieve then only sends the query", async () => {
+    srv.columnRequests.length = 0;
+    const progress: number[] = [];
+    const p = client.prepare((done, total) => {
+      assert.equal(total, db.s);
+      progress.push(done);
+    });
+    assert.equal(new Set(p.S).size, db.s);
+    assert.equal(p.query, null);
+    await p.ready;
+    assert.deepEqual(progress, Array.from({ length: db.s }, (_, k) => k + 1));
+    assert.deepEqual([...srv.columnRequests].sort((a, b) => a - b), [...p.S].sort((a, b) => a - b));
+    srv.columnRequests.length = 0;
+    srv.queries.length = 0;
+    assert.deepEqual(await client.retrieve(5, p), db.payloads[5]);
+    assert.equal(srv.columnRequests.length, 0);
+    assert.deepEqual(p.query, srv.queries[0]);
+  });
+
+  test("prepare: retrieve before the columns are in", async () => {
+    const p = client.prepare();
+    assert.deepEqual(await client.retrieve(3, p), db.payloads[3]);
+  });
+
+  test("prepare: a prepared lookup is used once, and only by its client", async () => {
+    const p = client.prepare();
+    await client.retrieve(1, p);
+    await assert.rejects(client.retrieve(2, p), isCode("bad-argument"));
+    const other = await RcPirClient.connect({ retrieval: srv.retrieval, compute: srv.compute });
+    await assert.rejects(other.retrieve(1, client.prepare()), isCode("bad-argument"));
+  });
+
   test("bad index, origin with a path, invalid URL, bad timeout", async () => {
     await assert.rejects(client.retrieve(db.t), isCode("bad-argument"));
     await assert.rejects(
@@ -105,6 +161,20 @@ describe("failures", () => {
   test("host ignores Range (200 with the whole shard)", () =>
     assert.rejects(retrieveWith({ ignoreRange: true }), isCode("http-status")));
   test("long compute answer", () => assert.rejects(retrieveWith({ longAnswer: true }), isCode("bad-length")));
+
+  test("prepare: a failed download rejects ready and the retrieve that uses it", async () => {
+    const srv = await startServers(db, { columnStatus: 404 });
+    try {
+      const c = await RcPirClient.connect({ retrieval: srv.retrieval, compute: srv.compute });
+      c.prepare(); // never used: its failure must not become an unhandled rejection
+      const p = c.prepare();
+      await assert.rejects(p.ready, isCode("http-status"));
+      await assert.rejects(c.retrieve(0, p), isCode("http-status"));
+      await new Promise((ok) => setTimeout(ok, 50));
+    } finally {
+      srv.close();
+    }
+  });
   test("column 404", () => assert.rejects(retrieveWith({ columnStatus: 404 }), isCode("http-status")));
 
   test("timeout: compute server never answers; the query is aborted", async () => {

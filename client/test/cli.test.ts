@@ -35,6 +35,9 @@ describe("rcpir-get", () => {
     assert.equal(r3.code, 2);
     const r4 = await run(["--index", "0"]);
     assert.equal(r4.code, 2);
+    const r5 = await run([...base, "--index", "0", "--gdrive-file", "abc"]); // RCPIR_GDRIVE_KEY not set
+    assert.equal(r5.code, 1);
+    assert.match(r5.stderr, /needs an API key/);
     for (const bad of ["0", "-5", "1.5", "x"]) {
       assert.equal((await run([...base, "--index", "0", "--timeout-ms", bad])).code, 2, `--timeout-ms ${bad}`);
     }
