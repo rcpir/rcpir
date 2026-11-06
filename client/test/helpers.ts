@@ -101,6 +101,7 @@ export interface MockServers {
   columnRequests: number[]; // column indices requested so far
   queries: Uint8Array[]; // compute query bodies received so far
   abortedQueries(): number; // queries whose connection the client closed before the answer was sent
+  maxColumnsInFlight(): number; // most column requests the retrieval server had open at the same time
   close(): void;
 }
 
@@ -116,9 +117,12 @@ export async function startServers(db: MockDb, faults: Faults = {}): Promise<Moc
   const columnRequests: number[] = [];
   const queries: Uint8Array[] = [];
   let aborted = 0;
+  let inFlight = 0, maxInFlight = 0;
 
   const retrieval = await listen(async (req, res) => {
     if (req.url === "/.well-known/rc-pir.json") return void res.end(db.paramsBytes);
+    maxInFlight = Math.max(maxInFlight, ++inFlight);
+    res.on("close", () => void inFlight--);
     if (faults.columnDelayMs) await new Promise((ok) => setTimeout(ok, faults.columnDelayMs));
     // /all (any query string): all of R as one object, the single-file layout of providers like GoogleDrive.
     const all = req.url?.split("?")[0] === "/all";
@@ -159,6 +163,7 @@ export async function startServers(db: MockDb, faults: Faults = {}): Promise<Moc
     columnRequests,
     queries,
     abortedQueries: () => aborted,
+    maxColumnsInFlight: () => maxInFlight,
     close() {
       for (const { server } of [retrieval, compute]) {
         server.closeAllConnections();

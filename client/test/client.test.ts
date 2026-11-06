@@ -151,6 +151,23 @@ describe("failures", () => {
     }
   }
 
+  test("provider.maxParallel: at most that many column requests in flight", async () => {
+    const srv = await startServers(db, { columnDelayMs: 30 });
+    try {
+      const provider: RetrievalProvider = {
+        name: "test",
+        maxParallel: 2,
+        locate: (j, p) => ({ url: new URL("/all", srv.retrieval), offset: j * p.L }),
+      };
+      const c = await RcPirClient.connect({ retrieval: srv.retrieval, compute: srv.compute, provider });
+      assert.deepEqual(await c.retrieve(4), db.payloads[4]);
+      assert.equal(srv.columnRequests.length, db.s);
+      assert.equal(srv.maxColumnsInFlight(), 2);
+    } finally {
+      srv.close();
+    }
+  });
+
   test("params.json differs between origins", () =>
     assert.rejects(retrieveWith({ computeParamsBytes: new TextEncoder().encode(JSON.stringify(db.params)) }),
       isCode("params-mismatch")));

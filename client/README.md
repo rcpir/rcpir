@@ -43,13 +43,16 @@ const payload = await client.retrieve(42);
   name and host, the arguments only select the site or file:
 
   ```ts
-  import { GoogleDrive, GitHubPages, OneDrive } from "@rcpir/client";
+  import { Dropbox, GoogleDrive, GitHubPages, OneDrive } from "@rcpir/client";
   provider: new GitHubPages("rcpir"),            // https://rcpir.github.io/rc-pir/r/<k> (same as the default there)
   provider: new GoogleDrive(fileId, apiKey),     // all of R in one Drive file, via the Drive API
   provider: new OneDrive(shareLink),             // all of R in one OneDrive file: its "Anyone with the link" share link
+  provider: new Dropbox(sharedLink),             // all of R in one Dropbox file: its shared link (…/scl/fi/<id>/<name>?rlkey=…)
+  provider: new Dropbox([linkA, linkB]),         // copies of that file: column j from copy j mod n (faster, see below)
   ```
 
-  `provider.name` is the display name. Error messages omit URL query strings (the Drive API key).
+  `provider.name` is the display name; `provider.maxParallel`, if set, limits the column requests in flight
+  (Dropbox: 24 per copy of the file; it rejects bursts with 429, counted per file, so copies add throughput). Error messages omit URL query strings (the Drive API key).
 - **`prepare(onColumn?)`** does the part of a lookup that does not depend on the block: it samples a fresh $S$,
   computes $He$ and downloads the $s$ columns, so it can run while the user picks a block. Pass the result to
   `retrieve(i, prepared)`, which then only sends $q_c = He + e_i$ and waits for the columns still in flight
@@ -86,7 +89,7 @@ const payload = await client.retrieve(42);
 | File | Content |
 |---|---|
 | `src/client.ts` | `RcPirClient`: params discovery, `prepare` and `retrieve`; `Prepared` |
-| `src/providers.ts` | `RetrievalProvider`, `GitHubPages`, `GoogleDrive`, `OneDrive`: where column $j$ of $R$ is stored |
+| `src/providers.ts` | `RetrievalProvider`, `GitHubPages`, `GoogleDrive`, `OneDrive`, `Dropbox`: where column $j$ of $R$ is stored |
 | `src/query.ts` | Deterministic steps for a given $S$ and $i$: `buildHe`, `addIndex`, `buildComputeQuery`, `columnLocation`, `combineAnswers`, `decodeBlock` (exported for conformance tests) |
 | `src/params.ts` | `parseParams` (validation), `isInsecure`, `sha256Hex` |
 | `src/h_prg.ts` | `importHSeed`, `hColumn`: WebCrypto AES-CTR, counter `BE64(j) ‖ 0^64`, `length: 64` |
@@ -98,13 +101,15 @@ const payload = await client.retrieve(42);
 
 ```
 rcpir-get --retrieval URL --compute URL --index i [--out FILE] [--pin-sha256 HEX] [--timeout-ms MS]
-          [--gdrive-file ID | --onedrive-link URL]
+          [--gdrive-file ID | --onedrive-link URL | --dropbox-link URL ...]
 ```
 
 - `--gdrive-file ID`: read the columns from this Google Drive file (`GoogleDrive`), with the API key from the
   environment variable `RCPIR_GDRIVE_KEY` (not an argument, so it stays out of the shell history).
 - `--onedrive-link URL`: read the columns from this OneDrive file (`OneDrive`), given by its "Anyone with the link"
   share link (a file link, not a folder link).
+- `--dropbox-link URL`: read the columns from this Dropbox file (`Dropbox`), given by its shared link. Repeat it for
+  links to copies of the file.
 - `--timeout-ms` is the deadline of each phase (params discovery, retrieval); default 30000.
 - Writes the payload to `FILE` or to stdout.
 - Exit codes: 0 on success, 1 on a protocol error, 2 on a usage error.

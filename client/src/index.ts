@@ -2,7 +2,7 @@
 // No runtime dependencies: only WebCrypto and fetch (browsers in a secure context, Node >= 19).
 
 export { RcPirClient, Prepared, DEFAULT_TIMEOUT_MS, type ClientOptions } from "./client.js";
-export { GitHubPages, GoogleDrive, OneDrive, type RetrievalProvider } from "./providers.js";
+export { GitHubPages, GoogleDrive, OneDrive, Dropbox, type RetrievalProvider } from "./providers.js";
 export { RcPirError, type RcPirErrorCode } from "./errors.js";
 export { parseParams, isInsecure, sha256Hex, type Params } from "./params.js";
 // Low-level steps, for deterministic conformance tests.
