@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { RcPirError } from "../src/errors.js";
 import type { Params } from "../src/params.js";
-import { GitHubPages, GoogleDrive, OneDrive } from "../src/providers.js";
+import { Dropbox, GitHubPages, GoogleDrive, OneDrive } from "../src/providers.js";
 
 // Compiled to client/build-test/test/, so the repository root is three levels up.
 const load = (name: string): any =>
@@ -83,5 +83,50 @@ test("OneDrive: only personal OneDrive file links on <tenant>-my.sharepoint.com"
     "https://mailtauacil-my.sharepoint.com/personal/u/Documents/00000000",   // not a share link
   ]) {
     assert.throws(() => new OneDrive(bad), badArgument, bad);
+  }
+});
+
+const DROPBOX_LINK =
+  "https://www.dropbox.com/scl/fi/6wgxzxcsudj12yh1f2me2/rcpir_c4_L4k_R.bin?rlkey=o9u63necrcjj77zzt12kgm1h4&st=m27uzez5&dl=0";
+
+test("Dropbox: shared link -> dl.dropboxusercontent.com, same path and rlkey only, column j at j * L", () => {
+  const db = new Dropbox(DROPBOX_LINK);
+  assert.equal(db.name, "Dropbox");
+  assert.equal(db.maxParallel, 24);
+  const p = params({ L: 4096, m: 231932, columns_per_shard: 16384 });
+  const expected = "https://dl.dropboxusercontent.com/scl/fi/6wgxzxcsudj12yh1f2me2/rcpir_c4_L4k_R.bin?rlkey=o9u63necrcjj77zzt12kgm1h4";
+  for (const j of [0, 1, 231931]) {
+    const { url, offset } = db.locate(j, p);
+    assert.equal(url.href, expected);
+    assert.equal(offset, j * 4096);
+  }
+  assert.equal(new Dropbox(expected + "&dl=1").locate(0, p).url.href, expected); // the direct link works too
+});
+
+test("Dropbox: copies of the file under several links, column j from copy j mod n, 24 in flight per copy", () => {
+  const second = "https://www.dropbox.com/scl/fi/2i8kuake0jt571mfrvquh/rcpir_c4_L4k_R2.bin?rlkey=rud3qdl74wf3sdjjvhmhpfw68&dl=0";
+  const db = new Dropbox([DROPBOX_LINK, second]);
+  assert.equal(db.maxParallel, 48);
+  const p = params({ L: 4096, m: 231932, columns_per_shard: 16384 });
+  const files = [0, 1, 2, 3].map((j) => db.locate(j, p).url.pathname.split("/").pop());
+  assert.deepEqual(files, ["rcpir_c4_L4k_R.bin", "rcpir_c4_L4k_R2.bin", "rcpir_c4_L4k_R.bin", "rcpir_c4_L4k_R2.bin"]);
+  assert.equal(db.locate(7, p).offset, 7 * 4096);
+  assert.equal(db.locate(1, p).url.searchParams.get("rlkey"), "rud3qdl74wf3sdjjvhmhpfw68");
+  assert.throws(() => new Dropbox([]), badArgument);
+  assert.throws(() => new Dropbox([DROPBOX_LINK, "https://evil.com/scl/fi/a/b?rlkey=k"]), badArgument);
+});
+
+test("Dropbox: only shared file links (/scl/fi/<id>/<name>?rlkey=...) on Dropbox hosts", () => {
+  for (const bad of [
+    "not a url",
+    "http://www.dropbox.com/scl/fi/abc/f.bin?rlkey=k",                    // not https
+    "https://evil.com/scl/fi/abc/f.bin?rlkey=k",                          // other host
+    "https://www.dropbox.com.evil.com/scl/fi/abc/f.bin?rlkey=k",
+    "https://www.dropbox.com/scl/fo/abc/xyz?rlkey=k",                     // folder link
+    "https://www.dropbox.com/s/abc/f.bin?dl=0",                           // legacy /s/ link
+    "https://www.dropbox.com/scl/fi/abc/f.bin",                           // no rlkey
+    "https://www.dropbox.com/scl/fi/abc/../x?rlkey=k",
+  ]) {
+    assert.throws(() => new Dropbox(bad), badArgument, bad);
   }
 });

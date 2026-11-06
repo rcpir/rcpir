@@ -163,21 +163,30 @@ export class RcPirClient {
     const { L, m, s } = this.params;
     const S = sampleSubset(m, s);
     let done = 0;
-    const columns = withDeadline(this.timeoutMs, (signal) =>
-      Promise.all(
-        S.map(async (j) => {
-          // One single-range GET per column (CORS-safelisted: no preflight); the host must answer 206.
-          // cache: "no-store": with the default mode, Chromium's HTTP cache queues concurrent range requests to the
-          // same URL (measured on rcpir.github.io: ~0.5 s per lookup instead of ~0.12 s; ~4.6 s with all of R in one
-          // file). Caching is useless here anyway: S is fresh and random for every lookup.
-          const { url, offset } = this.locate(j);
-          const range: RequestInit = { headers: { Range: `bytes=${offset}-${offset + L - 1}` }, cache: "no-store" };
-          const [col] = await fetchBytes(url, signal, range, L, 206);
-          onColumn?.(++done, s);
-          return col;
-        }),
-      ),
-    );
+    const columns = withDeadline(this.timeoutMs, async (signal) => {
+      // One single-range GET per column (CORS-safelisted: no preflight); the host must answer 206.
+      // cache: "no-store": with the default mode, Chromium's HTTP cache queues concurrent range requests to the
+      // same URL (measured on rcpir.github.io: ~0.5 s per lookup instead of ~0.12 s; ~4.6 s with all of R in one
+      // file). Caching is useless here anyway: S is fresh and random for every lookup.
+      const fetchColumn = async (j: number) => {
+        const { url, offset } = this.locate(j);
+        const range: RequestInit = { headers: { Range: `bytes=${offset}-${offset + L - 1}` }, cache: "no-store" };
+        const [col] = await fetchBytes(url, signal, range, L, 206);
+        onColumn?.(++done, s);
+        return col;
+      };
+      // At most maxParallel requests in flight: each worker takes the next column when its request completes.
+      const out: Uint8Array[] = new Array(s);
+      let next = 0;
+      const worker = async () => {
+        while (next < s) {
+          const k = next++;
+          out[k] = await fetchColumn(S[k]!);
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(this.provider?.maxParallel ?? s, s) }, worker));
+      return out;
+    });
     return new Prepared(this, S, buildHe(this.params, this.hKey, S), columns);
   }
 
