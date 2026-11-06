@@ -60,9 +60,15 @@ ranges queue on Microsoft's side. File size does not matter (64 MiB and 950 MB p
 - Not checked: whether every range request produces an event, and which client fields (IP, user agent) anonymous
   events carry.
 
-## Next steps (if pursued)
+## Client support
 
-1. Client: `cache: "no-store"` on column fetches (needed for every single-object host), and per-host URLs instead of
-   `/rc-pir/r/<shard>` paths.
-2. Single-file layout: `params.json` needs `columns_per_shard` = m (231,932), which changes the pinned params hash.
-3. Same mitigation as Google Drive: fetch the $s$ columns before the user picks an article (hides latency, not quota).
+`new OneDrive(shareLink)` (`client/src/providers.ts`; CLI `rcpir-get --onedrive-link URL`) takes the file's "Anyone
+with the link" share link and reads column $j$ at offset $j \cdot L$ through `download.aspx?share=<token>`, with the
+existing `params.json` (no single-file parameters needed). Measured on 2026-11-06 (from Israel, live compute server):
+
+| Run | Time |
+|---|---|
+| Node, lookup without `prepare()` | 0.72–0.96 s |
+| Node, `prepare()` (88 columns, in the background) | 0.73–1.05 s |
+| Node, click to block after `prepare()` | **55–58 ms** (GitHub Pages: 54–57 ms) |
+| Browser (headless Chromium, cross-site page), `prepare()` | 0.80–1.47 s, 88/88 columns |

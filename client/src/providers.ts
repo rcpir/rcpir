@@ -51,3 +51,36 @@ export class GoogleDrive implements RetrievalProvider {
     return { url: this.url, offset: j * p.L };
   }
 }
+
+/**
+ * All of R in one OneDrive file (column j at offset j * L), from its "Anyone with the link" share link
+ * https://<tenant>-my.sharepoint.com/:<type>:/<g|r>/personal/<user>/<token>. Read through
+ * /personal/<user>/_layouts/15/download.aspx?share=<token>: no cookie, Access-Control-Allow-Origin: *, the only
+ * OneDrive endpoint browsers can use from another site. Folder links do not work there (providers/ONEDRIVE.md).
+ */
+export class OneDrive implements RetrievalProvider {
+  readonly name = "OneDrive";
+  private readonly url: URL;
+
+  constructor(shareLink: string) {
+    const bad = (why: string) => new RcPirError("bad-argument", `not a OneDrive file share link (${why}): ${shareLink}`);
+    let link: URL;
+    try {
+      link = new URL(shareLink);
+    } catch {
+      throw bad("invalid URL");
+    }
+    if (link.protocol !== "https:" || link.port || !/^[a-z0-9-]+-my\.sharepoint\.com$/.test(link.hostname)) {
+      throw bad("expected https://<tenant>-my.sharepoint.com");
+    }
+    const m = /^\/:([a-z]):\/[gr]\/personal\/([A-Za-z0-9_]+)\/([A-Za-z0-9_-]+)\/?$/.exec(link.pathname);
+    if (!m) throw bad("expected /:<type>:/g/personal/<user>/<token>");
+    if (m[1] === "f") throw bad("this is a folder link; share the file itself");
+    this.url = new URL(`https://${link.hostname}/personal/${m[2]}/_layouts/15/download.aspx`);
+    this.url.searchParams.set("share", m[3]!);
+  }
+
+  locate(j: number, p: Params): { url: URL; offset: number } {
+    return { url: this.url, offset: j * p.L };
+  }
+}

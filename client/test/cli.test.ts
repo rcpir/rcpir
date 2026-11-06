@@ -38,6 +38,11 @@ describe("rcpir-get", () => {
     const r5 = await run([...base, "--index", "0", "--gdrive-file", "abc"]); // RCPIR_GDRIVE_KEY not set
     assert.equal(r5.code, 1);
     assert.match(r5.stderr, /needs an API key/);
+    const r6 = await run([...base, "--index", "0", "--gdrive-file", "abc", "--onedrive-link", "https://x-my.sharepoint.com/"]);
+    assert.equal(r6.code, 2); // one provider at most
+    const r7 = await run([...base, "--index", "0", "--onedrive-link", "https://evil.com/:u:/g/personal/u/T"]);
+    assert.equal(r7.code, 1);
+    assert.match(r7.stderr, /not a OneDrive file share link/);
     for (const bad of ["0", "-5", "1.5", "x"]) {
       assert.equal((await run([...base, "--index", "0", "--timeout-ms", bad])).code, 2, `--timeout-ms ${bad}`);
     }

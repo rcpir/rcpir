@@ -2,10 +2,12 @@
 // rcpir-get: retrieve one block privately (Node >= 19).
 //
 //   rcpir-get --retrieval URL --compute URL --index i [--out FILE] [--pin-sha256 HEX] [--timeout-ms MS]
-//             [--gdrive-file ID]
+//             [--gdrive-file ID | --onedrive-link URL]
 //
 // --gdrive-file: read the columns of R from this Google Drive file (all of R in one file) through the Drive API,
-// with the API key from the environment variable RCPIR_GDRIVE_KEY. params.json still comes from --retrieval.
+// with the API key from the environment variable RCPIR_GDRIVE_KEY.
+// --onedrive-link: read them from this OneDrive file (all of R in one file), given by its "Anyone with the link"
+// share link. params.json still comes from --retrieval.
 // Writes the payload to FILE, or to stdout. --timeout-ms bounds each of the two phases
 // (params discovery, retrieval); default 30000. For self-signed development certificates
 // set NODE_EXTRA_CA_CERTS=/path/to/ca.pem.
@@ -13,10 +15,11 @@
 import { writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { RcPirClient } from "./client.js";
-import { GoogleDrive } from "./providers.js";
+import { GoogleDrive, OneDrive } from "./providers.js";
 
 const USAGE =
-  "usage: rcpir-get --retrieval URL --compute URL --index i [--out FILE] [--pin-sha256 HEX] [--timeout-ms MS] [--gdrive-file ID]";
+  "usage: rcpir-get --retrieval URL --compute URL --index i [--out FILE] [--pin-sha256 HEX] [--timeout-ms MS]\n" +
+  "                 [--gdrive-file ID | --onedrive-link URL]";
 
 let args;
 try {
@@ -29,6 +32,7 @@ try {
       "pin-sha256": { type: "string" },
       "timeout-ms": { type: "string" },
       "gdrive-file": { type: "string" },
+      "onedrive-link": { type: "string" },
     },
   }));
 } catch (e) {
@@ -36,16 +40,21 @@ try {
   process.exit(2);
 }
 const timeoutOk = args["timeout-ms"] === undefined || /^[1-9]\d*$/.test(args["timeout-ms"]);
-if (!args.retrieval || !args.compute || !/^\d+$/.test(args.index ?? "") || !timeoutOk) {
+const oneProvider = args["gdrive-file"] === undefined || args["onedrive-link"] === undefined;
+if (!args.retrieval || !args.compute || !/^\d+$/.test(args.index ?? "") || !timeoutOk || !oneProvider) {
   console.error(USAGE);
   process.exit(2);
 }
 
 try {
   const gdrive = args["gdrive-file"];
+  const onedrive = args["onedrive-link"];
   const opts = {
     retrieval: args.retrieval,
-    provider: gdrive === undefined ? undefined : new GoogleDrive(gdrive, process.env["RCPIR_GDRIVE_KEY"] ?? ""),
+    provider:
+      gdrive !== undefined ? new GoogleDrive(gdrive, process.env["RCPIR_GDRIVE_KEY"] ?? "")
+      : onedrive !== undefined ? new OneDrive(onedrive)
+      : undefined,
     compute: args.compute,
     pinSha256: args["pin-sha256"],
     timeoutMs: args["timeout-ms"] === undefined ? undefined : Number(args["timeout-ms"]),
