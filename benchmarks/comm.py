@@ -154,6 +154,53 @@ def their_decode(scheme, B):
     return sum(ts) / len(ts) if ts else None
 
 
+RAM_BYTES = 31 * 10**9                          # the benchmark machine
+
+
+def their_setup(scheme, B):
+    """Hint (Setup) time in ms: mean over the RunPIR runs (results/recover_sweep/) and the Setup-only runs
+    (results/setup_sweep/, simplepir-setup/), which time the same call. A string if not measured."""
+    ts = []
+    for sweep in ("recover_sweep", "setup_sweep"):
+        path = RESULTS / f"{sweep}/{scheme}pir_B{B}.txt"
+        if path.exists():
+            ts += [go_ms(d) for d in re.findall(r"Setup\.\.\.\n\tElapsed: (\S+)", path.read_text())]
+    if ts:
+        return sum(ts) / len(ts)
+    if isinstance(their_ms(scheme, B), str):
+        return their_ms(scheme, B)                                  # killed in Setup, footnote 1
+    th = theirs(scheme, B)
+    if th and th["hint_kib"] * 1024 > RAM_BYTES:
+        return "hint > RAM²"
+    if (RESULTS / "setup_sweep").is_dir() and scheme == "double":
+        return "not run⁴"                                           # skipped by run_setup_times.sh
+    return None
+
+
+def their_setup_peak_gb(scheme, B):
+    """Largest peak RSS (GB) of the Setup-only runs, None if not measured."""
+    path = RESULTS / f"setup_sweep/{scheme}pir_B{B}.txt"
+    kb = [int(x) for x in re.findall(r"Peak RSS: (\d+) kB", path.read_text())] if path.exists() else []
+    return max(kb) * 1024 / 1e9 if kb else None
+
+
+def fmt_min(ms):
+    return "n/a" if ms is None else (ms if isinstance(ms, str) else f"{ms / 6e4:.1f} min")
+
+
+@functools.cache
+def encode_runs():
+    """{(t, L): run} of bench_encode.sh records (c = 16), see encode_report.py."""
+    import encode_report  # noqa: E402
+    return encode_report.load_records() if (RESULTS / "encode_records").is_dir() else {}
+
+
+def rc_encode(sel):
+    """RC-PIR encoder wall time without verify (ms) at this shape, c = 16 only; None if not measured."""
+    r = encode_runs().get((sel.t, sel.ell // 8))
+    return 1e3 * r["without_verify_s"] if r and sel.m == 16 * sel.t else None
+
+
 def load_client_times():
     """RC-PIR client time per query (ms, mean of sample + query + decode) per (B, c), bench_client.mjs records."""
     path = OURS / "client_records.jsonl"
@@ -225,6 +272,13 @@ print("- Hint: one-time download before the first query (SimplePIR/DoublePIR onl
       "- RC-PIR storage: $R = XH$ on the retrieval server (≈ c × database), written once by the encoder. "
       "Clients never download it, so it does not enter any other column. Besides it, the compute server "
       "holds the database itself, as SimplePIR/DoublePIR servers do.\n"
+      "- One-time server setup, before the first query (again after every database update): SimplePIR/DoublePIR "
+      "hint = the timed `Setup` of their `RunPIR` (one CPU thread; `results/recover_sweep/`, `results/setup_sweep/`, "
+      "mean of 3–4 runs); RC-PIR encode = wall time of one full encoder run without its verify step "
+      "(`rcpir-encode --device cuda`, GPU RTX 4070 SUPER for R = XH, the CPU for the PRG and the rest: "
+      "3–11 cores busy on average over a run, more for smaller m; "
+      "`results/encode_records/`, one run per block shape). Different hardware: these columns are not a "
+      "like-for-like comparison of the two algorithms.\n"
       "- SimplePIR/DoublePIR sizes: their `GetBW` (`results/bw_sweep/`), layout chosen by their `PickParams`.\n"
       "- Queries until SimplePIR (DoublePIR) is cheaper: after N queries a SimplePIR (DoublePIR) client has "
       "downloaded hint + N × online, an RC-PIR client N × online; RC-PIR's total is smaller up to this many "
@@ -232,19 +286,20 @@ print("- Hint: one-time download before the first query (SimplePIR/DoublePIR onl
       "\"never\": RC-PIR is also cheaper per query. Assumptions: each client downloads the hint once and "
       "reuses it for all its queries; the database does not change (after an update SimplePIR/DoublePIR "
       "clients download a new hint, so the count holds per database version); communication only (the "
-      "server's time to compute the hint, measured 2.5–2.7 min for SimplePIR at every record size of the sweep "
-      "and 2.8 min for DoublePIR with 1-bit entries, and the client's storage for it are not counted); upload and download are added, the hint counts as download.\n"
+      "server's setup time, columns above, and the client's storage for the hint are not counted); upload and "
+      "download are added, the hint counts as download.\n"
       "- Server time: one query, one thread, mean (throughput = 1 GiB of records / mean time). SimplePIR/"
       "DoublePIR: the 5 answer times of their `*PirSingle` benchmark (`results/time_sweep/`); RC-PIR: compute "
       f"server, 10 passes on the shape of this row (`{OURS_NAME}/server_records.jsonl`). The retrieval server only "
       "serves static byte ranges and is not timed.\n- Throughput: 1 GiB of records / mean server time, as in SimplePIR.\n")
 print("| record size | RC-PIR records per block "
       "| SimplePIR hint | DoublePIR hint | RC-PIR storage "
+      "| SimplePIR hint time (CPU) | DoublePIR hint time (CPU) | RC-PIR encode time (GPU)³ "
       "| SimplePIR online | DoublePIR online | RC-PIR online "
       "| queries until SimplePIR is cheaper | queries until DoublePIR is cheaper "
       "| SimplePIR server time | DoublePIR server time | RC-PIR server time "
       "| SimplePIR throughput | DoublePIR throughput | RC-PIR throughput |")
-print("|---" * 16 + "|")
+print("|---" * 19 + "|")
 for B in RECORD_SIZES:
     g, sel = best[(B, HEADLINE_C)]
     ours = kib(sel.comm.total)
@@ -255,12 +310,27 @@ for B in RECORD_SIZES:
     times = [their_ms(sc, B) for sc in ("simple", "double")] + [rc_ms(sel)]
     t_cells = [fmt_ms(t) if not isinstance(t, str) else t for t in times]
     tp_cells = [fmt_tput(t) if not isinstance(t, str) else "–" for t in times]
-    print(f"| {label(B)} | {g} | {hint[0]} | {hint[1]} | {size(sel.storage_bits // 8)} "
+    setup = [fmt_min(their_setup(sc, B)) for sc in ("simple", "double")] + [fmt_min(rc_encode(sel))]
+    print(f"| {label(B)} | {g} | {hint[0]} | {hint[1]} | {size(sel.storage_bits // 8)} | " + " | ".join(setup) + " "
           f"| {online[0]} | {online[1]} | {size(ours * 1024)} "
           f"| {be[0]} | {be[1]} | " + " | ".join(t_cells) + " | " + " | ".join(tp_cells) + " |")
 if any(isinstance(their_ms(sc, B), str) for sc in ("simple", "double") for B in RECORD_SIZES):
     print("\n¹ Killed during their `Setup` with nothing else running (31 GB RAM); the matrix is padded to "
           "57561 × 65536 elements. Most likely out of memory.")
+if any(their_setup("double", B) == "hint > RAM²" for B in RECORD_SIZES):
+    print("\n² Not run: DoublePIR's `Setup` holds the whole hint in memory (H2 = H1 · A2), and the hint is "
+          "larger than the machine's 31 GB of RAM.")
+runs = [r for B in RECORD_SIZES if (r := encode_runs().get((best[(B, HEADLINE_C)][1].t,
+                                                           best[(B, HEADLINE_C)][1].ell // 8)))]
+if runs:
+    print(f"\n³ Without the encoder's verify step (a spot check of 1000 columns of R recomputed on the CPU, a "
+          f"self-test of the encoder, not needed by the protocol): it adds {min(r['verify'] for r in runs):.0f}–"
+          f"{max(r['verify'] for r in runs):.0f} s. Full step times: `results/encode.md`.")
+peaks = [(B, pk) for B in RECORD_SIZES if (pk := their_setup_peak_gb("double", B))]
+if any(their_setup("double", B) == "not run⁴" for B in RECORD_SIZES) and peaks:
+    print(f"\n⁴ Not run: their `Setup` (GC off, as in their `RunPIR`) peaked at {peaks[0][1]:.1f} GB of RAM "
+          f"({label(peaks[0][0])}) to {peaks[-1][1]:.1f} GB ({label(peaks[-1][0])}); with a hint 10.6 GiB larger than "
+          "at 256 B, 1 KiB was predicted to exceed the machine's 31 GB.")
 
 # ---- Table 1b: RC-PIR for every c ----
 print("\n## 1b. RC-PIR for every storage factor c: online communication / queries until SimplePIR is cheaper\n")

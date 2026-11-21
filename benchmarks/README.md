@@ -5,12 +5,15 @@
 | `python3 comm.py` | B1: communication and storage by record size (analytic for RC-PIR: encoder's LPN parameter selection, $\lambda=128$; SimplePIR/DoublePIR from `results/bw_sweep/`), plus the server and client times measured by the runs below. Run it before and after them | `results/comm.md`, `results/comm_shapes.json` (RC-PIR shape per record size and $c$) |
 | `./run_server.sh` | B2/B3: compute-server time per pass over shape, threads and batch size (`server-bench/`, calls `CpuBackend` directly, no HTTP) | `results/server.jsonl` |
 | `./run_server.sh records` | Compute-server time for every shape in `results/comm_shapes.json`, one thread, one query, 10 passes | `results/server_records.jsonl` |
-| `./bench_encode.sh`, `python3 encode_report.py` | B4: full preprocessing of a 1 GiB DB with the real encoder CLI (`--device cuda`, verify on), $c=2,4,8,16$; needs the repo's `.env` with CuPy | `results/encode_c*.log`, `results/encode.md` |
+| `./bench_encode.sh`, `python3 encode_report.py` | B4: full preprocessing of a 1 GiB DB with the real encoder CLI (`--device cuda`, verify on), $c=2,4,8,16$; needs a Python with CuPy (the repo's `.env`, or `PY=...`) | `results/encode_c*.log`, `results/encode.md` |
+| `./bench_encode.sh records` | Same, $c=16$, at the exact block shape of every record size of `results/comm_shapes.json` (5 distinct shapes) | `results/encode_records/` |
+| `./run_setup_times.sh` | Runs the one-time setup measurements of B1 in order, one at a time: `run_simplepir.sh setup-sweep` for DoublePIR (1 bit, 64 B, 256 B; 1 KiB only if it fits in RAM), `bench_encode.sh records`, then `encode_report.py` and `comm.py`. Checks first that the GPU is free, the load is low and nothing would be appended | `results/run_setup_times.log` and the outputs of those scripts |
 | `node bench_client.mjs` | Client time per query in Node, no network (sample $S$, build $q_c$, decode), for every shape in `results/comm_shapes.json`, one Node process per configuration; needs `(cd ../client && npm install && npm run build)` | `results/client_records.jsonl` |
 | `./run_simplepir.sh bw-sweep` | SimplePIR/DoublePIR with the authors' own code (pinned commit, single thread): their `Test*PirBW` (communication only, layout from their `PickParams`) for 1 GiB of fixed-size records, record size 1 bit, 64 B … 64 KiB | `results/bw_sweep/` |
 | `./run_simplepir.sh time-sweep` | Their `*PirSingle` benchmark (5 answers, single thread) at the same record sizes | `results/time_sweep/` |
 | `(cd simplepir-query-split && go run .)` | Time of the steps of SimplePIR's client `Query` (their functions, 64-byte records; needs `simplepir/` from `run_simplepir.sh`) | `results/simplepir_query_split.txt` |
 | `node range_bench.mjs [--engine node\|browser] [--cache default\|no-store] [--page auto\|vendor\|local] URL ...` | Retrieval host: one lookup = `--s` concurrent random ranges of `--len` bytes over the given objects, after a 1-byte warm-up request per object (as the demo site does). `node`: one HTTP/2 session with Chrome's flow-control windows (6 HTTP/1.1 connections if the host has no HTTP/2); `browser`: headless Chromium `fetch()`, from a page on the host's origin or (`--page local`) a cross-origin page on 127.0.0.1 like a deployed client. Checks every 206 and Content-Range | stdout, `--json FILE` |
+| `./run_simplepir.sh setup-sweep` | Their hint computation alone: the timed `Setup` of their `RunPIR` (`simplepir-setup/`: same call, GC off as in `RunPIR`, no query/answer/recover), plus peak RSS; `REPS`, `RECORD_SIZES`, `SCHEMES` select runs | `results/setup_sweep/` (appended) |
 | `./run_simplepir.sh recover-sweep` | Their decode time at the same record sizes: their `RunPIR` with the real hint (`simplepir-recover/`, ≈ 3.8 min per run; `REPS`, `RECORD_SIZES`, `SCHEMES` select runs) | `results/recover_sweep/` (appended) |
 
 Throughput is defined as in SimplePIR: database size × queries / server time. The retrieval
@@ -58,6 +61,13 @@ count, server time, throughput.
 - **RC-PIR storage**: $R=XH$ on the retrieval server (≈ $c$ × database), written once by the encoder.
   Clients never download it, so it does not enter any other column. Besides it, the compute server
   holds the database itself, as SimplePIR/DoublePIR servers do.
+- **One-time server setup** (before the first query, and again after every database update):
+  SimplePIR/DoublePIR **hint time** = the timed `Setup` of their `RunPIR`, one CPU thread, mean of 3–4
+  runs (`results/recover_sweep/`, `results/setup_sweep/`). RC-PIR **encode time** = wall time of one full
+  encoder run at the shape of the row, **without the verify step** (footnote ³), on the RTX 4070 SUPER
+  for $R=XH$ plus the CPU (3–11 cores busy on average) for the PRG and the rest
+  (`results/encode_records/`, one run per shape). Different hardware, so these columns are not a
+  like-for-like comparison of the algorithms.
 - **Queries until SimplePIR / DoublePIR is cheaper**: after $N$ queries a SimplePIR client has
   downloaded hint + $N$ × online, an RC-PIR client $N$ × online. The column gives the number of queries
   up to which RC-PIR's total is smaller, hint / (RC-PIR online − SimplePIR online); beyond it the hint
@@ -66,9 +76,8 @@ count, server time, throughput.
   - each client downloads the hint once and reuses it for all its queries;
   - the database does not change: after an update SimplePIR/DoublePIR clients download a new hint, so
     the count holds per database version;
-  - communication only: the server's time to compute the hint (measured 2.5–2.7 min for SimplePIR at
-    every record size of the sweep, 2.7–2.8 min for DoublePIR with 1-bit entries) and the client's storage for
-    it are not counted;
+  - communication only: the server's setup time (columns above) and the client's storage for the hint
+    are not counted;
   - upload and download are added; the hint counts as download.
 - **Server time**: one query, one thread, mean. **Throughput** = 1 GiB of records / mean server time
   (as in SimplePIR). SimplePIR/DoublePIR: the 5 answer times of their `*PirSingle` benchmark
@@ -76,18 +85,24 @@ count, server time, throughput.
   (`results/server_records.jsonl`, std < 4%). The retrieval server only serves static byte ranges and is
   not timed. Run on 2026-10-25, each run alone, threads not pinned.
 
-| Record size | RC-PIR records per block | SimplePIR hint | DoublePIR hint | RC-PIR storage | SimplePIR online | DoublePIR online | RC-PIR online | Queries until SimplePIR is cheaper | Queries until DoublePIR is cheaper | SimplePIR server time | DoublePIR server time | RC-PIR server time | SimplePIR throughput | DoublePIR throughput | RC-PIR throughput |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 bit | 16384 | 120.7 MiB | 16 MiB | 16.1 GiB | 240 KiB | 344 KiB | 156.5 KiB | never | never | 45.8 ms | 55.5 ms | 22.6 ms | 21.8 GiB/s | 18.0 GiB/s | 44.3 GiB/s |
-| 64 B | 32 | 118.8 MiB | 912 MiB | 16.1 GiB | 236 KiB | 2.0 MiB | 156.5 KiB | never | never | 43.8 ms | 65.9 ms | 22.6 ms | 22.8 GiB/s | 15.2 GiB/s | 44.3 GiB/s |
-| 256 B | 8 | 118.7 MiB | 3.5 GiB | 16.1 GiB | 235 KiB | 7.3 MiB | 156.5 KiB | never | never | 44.5 ms | 63.1 ms | 22.6 ms | 22.5 GiB/s | 15.8 GiB/s | 44.3 GiB/s |
-| 1 KiB | 2 | 118.5 MiB | 14.1 GiB | 16.1 GiB | 235 KiB | 28.4 MiB | 156.5 KiB | never | never | 44.7 ms | 68.2 ms | 22.6 ms | 22.4 GiB/s | 14.7 GiB/s | 44.3 GiB/s |
-| 4 KiB | 1 | 121.9 MiB | 56.2 GiB | 16.0 GiB | 234 KiB | 112.7 MiB | 216.5 KiB | never | never | 42.8 ms | 92.3 ms | 20.6 ms | 23.4 GiB/s | 10.8 GiB/s | 48.5 GiB/s |
-| 8 KiB | 1 | 135.4 MiB | 112.4 GiB | 16.0 GiB | 237 KiB | 225.2 MiB | 384.5 KiB | 940 | never | 44.6 ms | 101.4 ms | 20.2 ms | 22.4 GiB/s | 9.9 GiB/s | 49.5 GiB/s |
-| 16 KiB | 1 | 162.5 MiB | 224.9 GiB | 16.0 GiB | 247 KiB | 450.2 MiB | 728.5 KiB | 346 | never | 44.0 ms | 155.4 ms | 19.6 ms | 22.7 GiB/s | 6.4 GiB/s | 50.9 GiB/s |
-| 64 KiB | 1 | 211.1 MiB | 899.4 GiB | 16.0 GiB | 275 KiB | 1.8 GiB | 2.8 MiB | 83 | never | 44.1 ms | killed in Setup¹ | 22.4 ms | 22.7 GiB/s | – | 44.7 GiB/s |
+| Record size | RC-PIR records per block | SimplePIR hint | DoublePIR hint | RC-PIR storage | SimplePIR hint time (CPU) | DoublePIR hint time (CPU) | RC-PIR encode time (GPU)³ | SimplePIR online | DoublePIR online | RC-PIR online | Queries until SimplePIR is cheaper | Queries until DoublePIR is cheaper | SimplePIR server time | DoublePIR server time | RC-PIR server time | SimplePIR throughput | DoublePIR throughput | RC-PIR throughput |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 bit | 16384 | 120.7 MiB | 16 MiB | 16.1 GiB | 2.6 min | 2.8 min | 8.2 min | 240 KiB | 344 KiB | 156.5 KiB | never | never | 45.8 ms | 55.5 ms | 22.6 ms | 21.8 GiB/s | 18.0 GiB/s | 44.3 GiB/s |
+| 64 B | 32 | 118.8 MiB | 912 MiB | 16.1 GiB | 2.7 min | 2.7 min | 8.2 min | 236 KiB | 2.0 MiB | 156.5 KiB | never | never | 43.8 ms | 65.9 ms | 22.6 ms | 22.8 GiB/s | 15.2 GiB/s | 44.3 GiB/s |
+| 256 B | 8 | 118.7 MiB | 3.5 GiB | 16.1 GiB | 2.6 min | 2.7 min | 8.2 min | 235 KiB | 7.3 MiB | 156.5 KiB | never | never | 44.5 ms | 63.1 ms | 22.6 ms | 22.5 GiB/s | 15.8 GiB/s | 44.3 GiB/s |
+| 1 KiB | 2 | 118.5 MiB | 14.1 GiB | 16.1 GiB | 2.6 min | not run⁴ | 8.2 min | 235 KiB | 28.4 MiB | 156.5 KiB | never | never | 44.7 ms | 68.2 ms | 22.6 ms | 22.4 GiB/s | 14.7 GiB/s | 44.3 GiB/s |
+| 4 KiB | 1 | 121.9 MiB | 56.2 GiB | 16.0 GiB | 2.6 min | hint > RAM² | 3.8 min | 234 KiB | 112.7 MiB | 216.5 KiB | never | never | 42.8 ms | 92.3 ms | 20.6 ms | 23.4 GiB/s | 10.8 GiB/s | 48.5 GiB/s |
+| 8 KiB | 1 | 135.4 MiB | 112.4 GiB | 16.0 GiB | 2.6 min | hint > RAM² | 2.0 min | 237 KiB | 225.2 MiB | 384.5 KiB | 940 | never | 44.6 ms | 101.4 ms | 20.2 ms | 22.4 GiB/s | 9.9 GiB/s | 49.5 GiB/s |
+| 16 KiB | 1 | 162.5 MiB | 224.9 GiB | 16.0 GiB | 2.6 min | hint > RAM² | 1.1 min | 247 KiB | 450.2 MiB | 728.5 KiB | 346 | never | 44.0 ms | 155.4 ms | 19.6 ms | 22.7 GiB/s | 6.4 GiB/s | 50.9 GiB/s |
+| 64 KiB | 1 | 211.1 MiB | 899.4 GiB | 16.0 GiB | 2.5 min | killed in Setup¹ | 0.5 min | 275 KiB | 1.8 GiB | 2.8 MiB | 83 | never | 44.1 ms | killed in Setup¹ | 22.4 ms | 22.7 GiB/s | – | 44.7 GiB/s |
 
 ¹ Killed during their `Setup` with nothing else running (31 GB RAM); the matrix is padded to 57561 × 65536 elements. Most likely out of memory.
+
+² Not run: DoublePIR's `Setup` holds the whole hint in memory (H2 = H1 · A2), and the hint is larger than the machine's 31 GB of RAM.
+
+³ Without the encoder's verify step (a spot check of 1000 columns of R recomputed on the CPU, a self-test of the encoder, not needed by the protocol): it adds 22–57 s. Full step times: `results/encode.md`.
+
+⁴ Not run: their `Setup` (GC off, as in their `RunPIR`) peaked at 16.8 GB of RAM (1 bit) to 23.7 GB (256 B); with a hint 10.6 GiB larger than at 256 B, 1 KiB was predicted to exceed the machine's 31 GB.
 
 - Up to 4 KiB records, RC-PIR ($c=16$) costs less per query than SimplePIR and has no hint. From 8 KiB
   on, the $s$ blocks fetched from the retrieval server ($s\approx 44$) dominate, and SimplePIR becomes
@@ -103,6 +118,16 @@ count, server time, throughput.
 - DoublePIR (its implementation's `GetBW`) costs more than RC-PIR per query at every record size, so it
   never catches up. Its hint and download grow linearly with the record size (see Database layout); it
   is closest for 1-bit entries (16 MiB hint, 344 KiB online against RC-PIR's 156.5 KiB).
+- One-time setup: SimplePIR's hint takes 2.5–2.7 min at every record size (one CPU thread), DoublePIR's
+  2.7–2.8 min where it fits in RAM (up to 256 B). RC-PIR's encoder takes 8.2 min for records up to 1 KiB
+  and 0.5 min for 64 KiB records, because $R=XH$ grows with $m=c\,t$ and larger records mean fewer
+  blocks $t$. It uses a GPU and several CPU cores while their hint uses one CPU thread, so the times
+  are not an algorithmic comparison. Counted in basic operations, RC-PIR's setup is the heavier one:
+  19× (64 KiB) to ≈ 600× (records up to 1 KiB) more word operations than SimplePIR's hint (see
+  "Setup work, independent of the hardware" under B4); on this machine the GPU makes up for it from
+  8 KiB on. Not counted: uploading $R$ (16 GiB) to the retrieval host, and generating SimplePIR's
+  matrix $A$ (their `Init`, outside their timed `Setup`), while our time does include generating $H$.
+  Both setups are repeated after every database update.
 
 ### RC-PIR for every storage factor $c$ (`results/comm.md` §1b)
 
@@ -234,9 +259,12 @@ Same layouts as the table above (best number of records per block for each $c$),
 
 ### Preprocessing (B4): full encoder run, 1 GiB, RTX 4070 SUPER
 
-One complete run of `rcpir-encode --device cuda --c C --yes` per $c$ on a random 1 GiB `DB.jsonl`
-(shapes as in the table), verify on (spot check of 1000 columns). Step times from timestamped log lines
-(`results/encode.md` also lists the attack costs).
+One complete run of `rcpir-encode --device cuda --c C --yes` per $c$ on a random 1 GiB `DB.jsonl`,
+verify on (spot check of 1000 columns). Step times from timestamped log lines
+(`results/encode.md` also lists the attack costs). The $t$ of each run is that of B1 for records up to
+1 KiB, but the blocks are 8 bytes shorter than B1's ($L$ = 1024 / 2048 bytes instead of 1032 / 2056: a
+2044-byte payload instead of 2048), a 0.4–0.8% difference; the runs at B1's exact shapes are in the
+second table.
 
 | $c$ | $t$ | $m$ | $s$ | $\lambda'$ | min attack (bits) | $R=XH$ (all panels) | $r$-digest + verify | total wall | peak RAM | $R$ on disk | shards |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -252,3 +280,59 @@ One complete run of `rcpir-encode --device cuda --c C --yes` per $c$ on a random
   so it grows linearly with $m$.
 - Verify is the second largest step: ≈120 s at $t=2^{20}$, ≈70 s at $t=2^{19}$ (`docs/encoder.md` §2
   estimates ~20 s for 1 GiB). Three separate reruns of `verify()` on the $c=4$ output took 119–128 s.
+
+#### $c=16$ at the exact block shape of every record size of B1 (`bench_encode.sh records`, run on 2026-11-21)
+
+One run per distinct shape (the four record sizes up to 1 KiB share one), same CLI and machine, each run
+alone. These are the "RC-PIR encode time" column of B1 (total without verify).
+
+| Record sizes | $t$ | $L$ (bytes) | $m$ | $s$ | $\lambda'$ | min attack (bits) | $R=XH$ | $r$-digest | verify | total without verify | total wall | peak RAM |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 bit – 1 KiB | $2^{19}$ | 2056 | $2^{23}$ | 45 | 179 | 180.0 | 473 s | 11 s | 57 s | 8 min 12 s | 9 min 09 s | 4.1 GiB |
+| 4 KiB | $2^{18}$ | 4104 | $2^{22}$ | 45 | 178 | 180.0 | 209 s | 11 s | 31 s | 3 min 47 s | 4 min 18 s | 4.1 GiB |
+| 8 KiB | $2^{17}$ | 8200 | $2^{21}$ | 45 | 177 | 180.0 | 102 s | 10 s | 23 s | 2 min 00 s | 2 min 23 s | 4.1 GiB |
+| 16 KiB | $2^{16}$ | 16392 | $2^{20}$ | 44 | 176 | 176.0 | 51 s | 11 s | 22 s | 1 min 09 s | 1 min 30 s | 3.6 GiB |
+| 64 KiB | $2^{14}$ | 65544 | $2^{18}$ | 44 | 174 | 176.0 | 13 s | 13 s | 23 s | 0 min 33 s | 0 min 56 s | 3.3 GiB |
+
+- $s$ and $m$ of every run equal those of `results/comm_shapes.json`; verify passed in every run.
+- $R=XH$ runs at $1.5$–$1.8\cdot10^{14}$ bit operations/s ($n\cdot m$ / time), so it halves with every
+  doubling of the record size ($m=16t$: 473 → 209 → 102 → 51 s); scan, packing and $r$-digest add
+  ≈ 20 s at every shape.
+- Nearly the same shape as the $c=16$ row of the table above ($t=2^{19}$, blocks 8 bytes longer):
+  $R=XH$ took 473 s here vs 533 s there (runs on different days), so expect run-to-run differences of
+  ≈ 10% in this step.
+- Verify: 22–57 s, growing with $t$; it is a self-test of the encoder, which is why B1 leaves it out.
+
+#### Setup work, independent of the hardware
+
+The setup times in B1 compare a GPU with one CPU thread. Counting basic operations instead:
+
+- **SimplePIR hint** $H = DB\cdot A \bmod q$: $DB$ is $l\times m$ (their `PickParams`, `results/bw_sweep/`) with
+  entries in $\mathbb{Z}_p$, $A$ is $m\times n_{\mathrm{LWE}}$ with the LWE secret dimension $n_{\mathrm{LWE}}=1024$
+  (their `SEC_PARAM`; not RC-PIR's $n$, the database size), so $l\cdot m\cdot n_{\mathrm{LWE}}$ multiply-adds of
+  32-bit integers: the LWE modulus is $q=2^{32}$, so `uint32` arithmetic with reduction by overflow
+  (`out += a*b` in their `matMul`).
+- **RC-PIR** $R = XH$ over $\mathbb{F}_2$: each of the $\ell\cdot m$ bits of $R$ is a parity over $t$ bits, and
+  about half of the entries of $H$ are 1, so $\ell\, t\, m/2 = c\,\ell\, t^2/2$ bit XORs, counted here as
+  64-bit word XORs ($/64$). Shapes of B1, $c=16$.
+
+| Record size | SimplePIR $l\times m\times n_{\mathrm{LWE}}$ | SimplePIR 32-bit multiply-adds | RC-PIR shape | RC-PIR 64-bit XORs | Ratio |
+|---|---|---|---|---|---|
+| 1 bit | 30893 × 30895 × 1024 | $9.8\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 578× |
+| 64 B | 30415 × 30339 × 1024 | $9.4\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 598× |
+| 256 B | 30380 × 29960 × 1024 | $9.3\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 606× |
+| 1 KiB | 30345 × 29960 × 1024 | $9.3\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 607× |
+| 4 KiB | 31203 × 29128 × 1024 | $9.3\cdot10^{11}$ | $t=2^{18}$, $\ell=32832$ | $2.8\cdot10^{14}$ | 303× |
+| 8 KiB | 34665 × 26215 × 1024 | $9.3\cdot10^{11}$ | $t=2^{17}$, $\ell=65600$ | $1.4\cdot10^{14}$ | 151× |
+| 16 KiB | 41598 × 21846 × 1024 | $9.3\cdot10^{11}$ | $t=2^{16}$, $\ell=131136$ | $7.0\cdot10^{13}$ | 76× |
+| 64 KiB | 54039 × 16384 × 1024 | $9.1\cdot10^{11}$ | $t=2^{14}$, $\ell=524352$ | $1.8\cdot10^{13}$ | 19× |
+
+- SimplePIR's hint is the same work, ≈ $9.3\cdot10^{11}$ multiply-adds, at every record size (one pass of
+  the 1 GiB database against the $n_{\mathrm{LWE}}=1024$ columns of $A$). RC-PIR's work is $c\,\ell\,t^2/2$: it falls with
+  every doubling of the record size, as fewer, wider blocks shorten each parity.
+- A 32-bit multiply-add costs more than a 64-bit XOR, so the ratio overstates the difference in time on
+  equal hardware; it is a rough guide, not a prediction. Measured rates: SimplePIR
+  ≈ $6\cdot10^{9}$ multiply-adds/s (one CPU thread), RC-PIR ≈ $1.2$–$1.4\cdot10^{12}$ word XORs/s
+  (RTX 4070 SUPER).
+- Generating the random matrices is not in these counts ($A$: $m\cdot n_{\mathrm{LWE}}$ words, outside their timed
+  `Setup`; $H$: $t\cdot m = c\,t^2$ bits from the PRG, inside our encode time).

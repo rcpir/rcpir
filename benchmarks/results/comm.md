@@ -5,23 +5,30 @@ n = 2^33 bits (1 GiB), lambda = 128, Q = 2^32. Sizes in KiB unless noted.
 - Hint: one-time download before the first query (SimplePIR/DoublePIR only).
 - Online: upload + download of one query; for RC-PIR compute up + down + retrieval up + down.
 - RC-PIR storage: $R = XH$ on the retrieval server (≈ c × database), written once by the encoder. Clients never download it, so it does not enter any other column. Besides it, the compute server holds the database itself, as SimplePIR/DoublePIR servers do.
+- One-time server setup, before the first query (again after every database update): SimplePIR/DoublePIR hint = the timed `Setup` of their `RunPIR` (one CPU thread; `results/recover_sweep/`, `results/setup_sweep/`, mean of 3–4 runs); RC-PIR encode = wall time of one full encoder run without its verify step (`rcpir-encode --device cuda`, GPU RTX 4070 SUPER for R = XH, the CPU for the PRG and the rest: 3–11 cores busy on average over a run, more for smaller m; `results/encode_records/`, one run per block shape). Different hardware: these columns are not a like-for-like comparison of the two algorithms.
 - SimplePIR/DoublePIR sizes: their `GetBW` (`results/bw_sweep/`), layout chosen by their `PickParams`.
-- Queries until SimplePIR (DoublePIR) is cheaper: after N queries a SimplePIR (DoublePIR) client has downloaded hint + N × online, an RC-PIR client N × online; RC-PIR's total is smaller up to this many queries, beyond it the hint has paid for itself: hint / (RC-PIR online − SimplePIR online). "never": RC-PIR is also cheaper per query. Assumptions: each client downloads the hint once and reuses it for all its queries; the database does not change (after an update SimplePIR/DoublePIR clients download a new hint, so the count holds per database version); communication only (the server's time to compute the hint, measured 2.5–2.7 min for SimplePIR at every record size of the sweep and 2.8 min for DoublePIR with 1-bit entries, and the client's storage for it are not counted); upload and download are added, the hint counts as download.
+- Queries until SimplePIR (DoublePIR) is cheaper: after N queries a SimplePIR (DoublePIR) client has downloaded hint + N × online, an RC-PIR client N × online; RC-PIR's total is smaller up to this many queries, beyond it the hint has paid for itself: hint / (RC-PIR online − SimplePIR online). "never": RC-PIR is also cheaper per query. Assumptions: each client downloads the hint once and reuses it for all its queries; the database does not change (after an update SimplePIR/DoublePIR clients download a new hint, so the count holds per database version); communication only (the server's setup time, columns above, and the client's storage for the hint are not counted); upload and download are added, the hint counts as download.
 - Server time: one query, one thread, mean (throughput = 1 GiB of records / mean time). SimplePIR/DoublePIR: the 5 answer times of their `*PirSingle` benchmark (`results/time_sweep/`); RC-PIR: compute server, 10 passes on the shape of this row (`results/server_records.jsonl`). The retrieval server only serves static byte ranges and is not timed.
 - Throughput: 1 GiB of records / mean server time, as in SimplePIR.
 
-| record size | RC-PIR records per block | SimplePIR hint | DoublePIR hint | RC-PIR storage | SimplePIR online | DoublePIR online | RC-PIR online | queries until SimplePIR is cheaper | queries until DoublePIR is cheaper | SimplePIR server time | DoublePIR server time | RC-PIR server time | SimplePIR throughput | DoublePIR throughput | RC-PIR throughput |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 bit | 16384 | 120.7 MiB | 16 MiB | 16.1 GiB | 240 KiB | 344 KiB | 156.5 KiB | never | never | 45.8 ms | 55.5 ms | 22.6 ms | 21.8 GiB/s | 18.0 GiB/s | 44.3 GiB/s |
-| 64 B | 32 | 118.8 MiB | 912 MiB | 16.1 GiB | 236 KiB | 2.0 MiB | 156.5 KiB | never | never | 43.8 ms | 65.9 ms | 22.6 ms | 22.8 GiB/s | 15.2 GiB/s | 44.3 GiB/s |
-| 256 B | 8 | 118.7 MiB | 3.5 GiB | 16.1 GiB | 235 KiB | 7.3 MiB | 156.5 KiB | never | never | 44.5 ms | 63.1 ms | 22.6 ms | 22.5 GiB/s | 15.8 GiB/s | 44.3 GiB/s |
-| 1 KiB | 2 | 118.5 MiB | 14.1 GiB | 16.1 GiB | 235 KiB | 28.4 MiB | 156.5 KiB | never | never | 44.7 ms | 68.2 ms | 22.6 ms | 22.4 GiB/s | 14.7 GiB/s | 44.3 GiB/s |
-| 4 KiB | 1 | 121.9 MiB | 56.2 GiB | 16.0 GiB | 234 KiB | 112.7 MiB | 216.5 KiB | never | never | 42.8 ms | 92.3 ms | 20.6 ms | 23.4 GiB/s | 10.8 GiB/s | 48.5 GiB/s |
-| 8 KiB | 1 | 135.4 MiB | 112.4 GiB | 16.0 GiB | 237 KiB | 225.2 MiB | 384.5 KiB | 940 | never | 44.6 ms | 101.4 ms | 20.2 ms | 22.4 GiB/s | 9.9 GiB/s | 49.5 GiB/s |
-| 16 KiB | 1 | 162.5 MiB | 224.9 GiB | 16.0 GiB | 247 KiB | 450.2 MiB | 728.5 KiB | 346 | never | 44.0 ms | 155.4 ms | 19.6 ms | 22.7 GiB/s | 6.4 GiB/s | 50.9 GiB/s |
-| 64 KiB | 1 | 211.1 MiB | 899.4 GiB | 16.0 GiB | 275 KiB | 1.8 GiB | 2.8 MiB | 83 | never | 44.1 ms | killed in Setup¹ | 22.4 ms | 22.7 GiB/s | – | 44.7 GiB/s |
+| record size | RC-PIR records per block | SimplePIR hint | DoublePIR hint | RC-PIR storage | SimplePIR hint time (CPU) | DoublePIR hint time (CPU) | RC-PIR encode time (GPU)³ | SimplePIR online | DoublePIR online | RC-PIR online | queries until SimplePIR is cheaper | queries until DoublePIR is cheaper | SimplePIR server time | DoublePIR server time | RC-PIR server time | SimplePIR throughput | DoublePIR throughput | RC-PIR throughput |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 bit | 16384 | 120.7 MiB | 16 MiB | 16.1 GiB | 2.6 min | 2.8 min | 8.2 min | 240 KiB | 344 KiB | 156.5 KiB | never | never | 45.8 ms | 55.5 ms | 22.6 ms | 21.8 GiB/s | 18.0 GiB/s | 44.3 GiB/s |
+| 64 B | 32 | 118.8 MiB | 912 MiB | 16.1 GiB | 2.7 min | 2.7 min | 8.2 min | 236 KiB | 2.0 MiB | 156.5 KiB | never | never | 43.8 ms | 65.9 ms | 22.6 ms | 22.8 GiB/s | 15.2 GiB/s | 44.3 GiB/s |
+| 256 B | 8 | 118.7 MiB | 3.5 GiB | 16.1 GiB | 2.6 min | 2.7 min | 8.2 min | 235 KiB | 7.3 MiB | 156.5 KiB | never | never | 44.5 ms | 63.1 ms | 22.6 ms | 22.5 GiB/s | 15.8 GiB/s | 44.3 GiB/s |
+| 1 KiB | 2 | 118.5 MiB | 14.1 GiB | 16.1 GiB | 2.6 min | not run⁴ | 8.2 min | 235 KiB | 28.4 MiB | 156.5 KiB | never | never | 44.7 ms | 68.2 ms | 22.6 ms | 22.4 GiB/s | 14.7 GiB/s | 44.3 GiB/s |
+| 4 KiB | 1 | 121.9 MiB | 56.2 GiB | 16.0 GiB | 2.6 min | hint > RAM² | 3.8 min | 234 KiB | 112.7 MiB | 216.5 KiB | never | never | 42.8 ms | 92.3 ms | 20.6 ms | 23.4 GiB/s | 10.8 GiB/s | 48.5 GiB/s |
+| 8 KiB | 1 | 135.4 MiB | 112.4 GiB | 16.0 GiB | 2.6 min | hint > RAM² | 2.0 min | 237 KiB | 225.2 MiB | 384.5 KiB | 940 | never | 44.6 ms | 101.4 ms | 20.2 ms | 22.4 GiB/s | 9.9 GiB/s | 49.5 GiB/s |
+| 16 KiB | 1 | 162.5 MiB | 224.9 GiB | 16.0 GiB | 2.6 min | hint > RAM² | 1.1 min | 247 KiB | 450.2 MiB | 728.5 KiB | 346 | never | 44.0 ms | 155.4 ms | 19.6 ms | 22.7 GiB/s | 6.4 GiB/s | 50.9 GiB/s |
+| 64 KiB | 1 | 211.1 MiB | 899.4 GiB | 16.0 GiB | 2.5 min | killed in Setup¹ | 0.5 min | 275 KiB | 1.8 GiB | 2.8 MiB | 83 | never | 44.1 ms | killed in Setup¹ | 22.4 ms | 22.7 GiB/s | – | 44.7 GiB/s |
 
 ¹ Killed during their `Setup` with nothing else running (31 GB RAM); the matrix is padded to 57561 × 65536 elements. Most likely out of memory.
+
+² Not run: DoublePIR's `Setup` holds the whole hint in memory (H2 = H1 · A2), and the hint is larger than the machine's 31 GB of RAM.
+
+³ Without the encoder's verify step (a spot check of 1000 columns of R recomputed on the CPU, a self-test of the encoder, not needed by the protocol): it adds 22–57 s. Full step times: `results/encode.md`.
+
+⁴ Not run: their `Setup` (GC off, as in their `RunPIR`) peaked at 16.8 GB of RAM (1 bit) to 23.7 GB (256 B); with a hint 10.6 GiB larger than at 256 B, 1 KiB was predicted to exceed the machine's 31 GB.
 
 ## 1b. RC-PIR for every storage factor c: online communication / queries until SimplePIR is cheaper
 

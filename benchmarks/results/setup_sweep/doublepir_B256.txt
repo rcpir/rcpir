@@ -1,0 +1,15 @@
+Working with: n=1024; db size=2^29 (l=14400, m=65536); logq=32; p=552; sigma=6.400000
+Total packed DB size is ~1024.709001 MB
+Executing DoublePIR
+Setup...
+	Elapsed: 2m40.253293191s
+		Offline download: 3686400.000000 KB
+Executing DoublePIR
+Setup...
+	Elapsed: 2m39.298748999s
+		Offline download: 3686400.000000 KB
+Executing DoublePIR
+Setup...
+	Elapsed: 2m39.282988784s
+		Offline download: 3686400.000000 KB
+Peak RSS: 23153688 kB
