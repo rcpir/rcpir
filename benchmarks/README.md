@@ -121,9 +121,13 @@ count, server time, throughput.
 - One-time setup: SimplePIR's hint takes 2.5–2.7 min at every record size (one CPU thread), DoublePIR's
   2.7–2.8 min where it fits in RAM (up to 256 B). RC-PIR's encoder takes 8.2 min for records up to 1 KiB
   and 0.5 min for 64 KiB records, because $R=XH$ grows with $m=c\,t$ and larger records mean fewer
-  blocks $t$. It uses a GPU and several CPU cores while their hint uses one CPU thread, so this is not
-  an algorithmic comparison: per record size, RC-PIR's setup is 3× slower up to 1 KiB, 1.5× at 4 KiB, and faster from
-  8 KiB on, on very different hardware. Both are repeated after every database update.
+  blocks $t$. It uses a GPU and several CPU cores while their hint uses one CPU thread, so the times
+  are not an algorithmic comparison. Counted in basic operations, RC-PIR's setup is the heavier one:
+  19× (64 KiB) to ≈ 600× (records up to 1 KiB) more word operations than SimplePIR's hint (see
+  "Setup work, independent of the hardware" under B4); on this machine the GPU makes up for it from
+  8 KiB on. Not counted: uploading $R$ (16 GiB) to the retrieval host, and generating SimplePIR's
+  matrix $A$ (their `Init`, outside their timed `Setup`), while our time does include generating $H$.
+  Both setups are repeated after every database update.
 
 ### RC-PIR for every storage factor $c$ (`results/comm.md` §1b)
 
@@ -298,3 +302,37 @@ alone. These are the "RC-PIR encode time" column of B1 (total without verify).
   $R=XH$ took 473 s here vs 533 s there (runs on different days), so expect run-to-run differences of
   ≈ 10% in this step.
 - Verify: 22–57 s, growing with $t$; it is a self-test of the encoder, which is why B1 leaves it out.
+
+#### Setup work, independent of the hardware
+
+The setup times in B1 compare a GPU with one CPU thread. Counting basic operations instead:
+
+- **SimplePIR hint** $H = DB\cdot A \bmod q$: $DB$ is $l\times m$ (their `PickParams`, `results/bw_sweep/`) with
+  entries in $\mathbb{Z}_p$, $A$ is $m\times n_{\mathrm{LWE}}$ with the LWE secret dimension $n_{\mathrm{LWE}}=1024$
+  (their `SEC_PARAM`; not RC-PIR's $n$, the database size), so $l\cdot m\cdot n_{\mathrm{LWE}}$ multiply-adds of
+  32-bit integers: the LWE modulus is $q=2^{32}$, so `uint32` arithmetic with reduction by overflow
+  (`out += a*b` in their `matMul`).
+- **RC-PIR** $R = XH$ over $\mathbb{F}_2$: each of the $\ell\cdot m$ bits of $R$ is a parity over $t$ bits, and
+  about half of the entries of $H$ are 1, so $\ell\, t\, m/2 = c\,\ell\, t^2/2$ bit XORs, counted here as
+  64-bit word XORs ($/64$). Shapes of B1, $c=16$.
+
+| Record size | SimplePIR $l\times m\times n_{\mathrm{LWE}}$ | SimplePIR 32-bit multiply-adds | RC-PIR shape | RC-PIR 64-bit XORs | Ratio |
+|---|---|---|---|---|---|
+| 1 bit | 30893 × 30895 × 1024 | $9.8\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 578× |
+| 64 B | 30415 × 30339 × 1024 | $9.4\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 598× |
+| 256 B | 30380 × 29960 × 1024 | $9.3\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 606× |
+| 1 KiB | 30345 × 29960 × 1024 | $9.3\cdot10^{11}$ | $t=2^{19}$, $\ell=16448$ | $5.7\cdot10^{14}$ | 607× |
+| 4 KiB | 31203 × 29128 × 1024 | $9.3\cdot10^{11}$ | $t=2^{18}$, $\ell=32832$ | $2.8\cdot10^{14}$ | 303× |
+| 8 KiB | 34665 × 26215 × 1024 | $9.3\cdot10^{11}$ | $t=2^{17}$, $\ell=65600$ | $1.4\cdot10^{14}$ | 151× |
+| 16 KiB | 41598 × 21846 × 1024 | $9.3\cdot10^{11}$ | $t=2^{16}$, $\ell=131136$ | $7.0\cdot10^{13}$ | 76× |
+| 64 KiB | 54039 × 16384 × 1024 | $9.1\cdot10^{11}$ | $t=2^{14}$, $\ell=524352$ | $1.8\cdot10^{13}$ | 19× |
+
+- SimplePIR's hint is the same work, ≈ $9.3\cdot10^{11}$ multiply-adds, at every record size (one pass of
+  the 1 GiB database against the $n_{\mathrm{LWE}}=1024$ columns of $A$). RC-PIR's work is $c\,\ell\,t^2/2$: it falls with
+  every doubling of the record size, as fewer, wider blocks shorten each parity.
+- A 32-bit multiply-add costs more than a 64-bit XOR, so the ratio overstates the difference in time on
+  equal hardware; it is a rough guide, not a prediction. Measured rates: SimplePIR
+  ≈ $6\cdot10^{9}$ multiply-adds/s (one CPU thread), RC-PIR ≈ $1.2$–$1.4\cdot10^{12}$ word XORs/s
+  (RTX 4070 SUPER).
+- Generating the random matrices is not in these counts ($A$: $m\cdot n_{\mathrm{LWE}}$ words, outside their timed
+  `Setup`; $H$: $t\cdot m = c\,t^2$ bits from the PRG, inside our encode time).
