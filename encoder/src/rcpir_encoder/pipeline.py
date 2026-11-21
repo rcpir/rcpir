@@ -253,6 +253,7 @@ def encode(opts: EncodeOptions) -> dict | None:
     # 5. R = XH and its digest
     compute_r(X, seed, site, state, progress_path, matmul, opts.panel_cols or panel_cols(t, L))
 
+    log("computing r_digest ...")
     params = {
         "format_version": params_spec.FORMAT_VERSION,
         "t": t,
@@ -275,6 +276,7 @@ def encode(opts: EncodeOptions) -> dict | None:
 
     # 6. verify
     if opts.verify:
+        log("verifying ...")
         verify(site, params, X)
 
     # 7. params.json last
